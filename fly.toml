@@ -7,5 +7,11 @@ app = "zorservbot"
   PYTHONUNBUFFERED = "1"
 
 [experimental]
-  allowed_public_ports = []
   auto_rollback = true
+
+[checks]
+  [checks.alive]
+    type = "process"
+    interval = "30s"
+    timeout = "5s"
+    grace_period = "10s"
