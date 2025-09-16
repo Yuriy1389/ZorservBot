@@ -1,4 +1,5 @@
-app = "my-tg-bot"
+app = "zorservbot
+"
 
 [build]
   dockerfile = "Dockerfile"
