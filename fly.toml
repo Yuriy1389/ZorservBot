@@ -8,3 +8,4 @@ app = "zorservbot"
 
 [experimental]
   auto_rollback = true
+ 
