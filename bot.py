@@ -62,7 +62,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Конфигурация
-TOKEN = "7789567831:AAGeplFqT_iFu_DOpSWv_oYQ-m2tMbEXyYw"
+TOKEN = os.getenv("BOT_TOKEN")
 ADMIN_CHAT_ID = 1838738269
 MAX_PHOTO_SIZE = 20 * 1024 * 1024  # 20MB
 MAX_VIDEO_SIZE = 50 * 1024 * 1024  # 50MB
