@@ -1,7 +1,7 @@
 import sys
 import os
 
-# Добавляем путь для импортов
+# Добавляем путь для импортов 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 # Проверяем, что бот не запущен повторно
