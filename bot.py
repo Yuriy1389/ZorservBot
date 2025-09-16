@@ -1,35 +1,8 @@
-import sys
-import os
-
-# Добавляем путь для импортов 
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-
-# Проверяем, что бот не запущен повторно
-def check_already_running():
-    import psutil
-    current_pid = os.getpid()
-    current_script = os.path.abspath(__file__)
-
-    for process in psutil.process_iter(['pid', 'name', 'cmdline']):
-        try:
-            if (process.info['pid'] != current_pid and
-                process.info['cmdline'] and
-                current_script in ' '.join(process.info['cmdline'])):
-                print("⚠️ Бот уже запущен! Завершаем...")
-                sys.exit(0)
-        except:
-            pass
-
-check_already_running()
 import os
 import logging
 import sqlite3
-import requests
-import json
 from datetime import datetime, time
 import pytz
-from flask import Flask
-from threading import Thread
 from telegram import (
     Update,
     InputFile,
@@ -62,11 +35,15 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Конфигурация
-TOKEN = os.getenv("BOT_TOKEN")
+TOKEN = os.getenv("BOT_TOKEN")   # теперь берём токен из переменной окружения
+if not TOKEN:
+    raise ValueError("❌ Не найден BOT_TOKEN в окружении. Задай его через fly secrets set BOT_TOKEN=...")
+
 ADMIN_CHAT_ID = 1838738269
 MAX_PHOTO_SIZE = 20 * 1024 * 1024  # 20MB
 MAX_VIDEO_SIZE = 50 * 1024 * 1024  # 50MB
 MOSCOW_TZ = pytz.timezone('Europe/Moscow')
+
 
 # URL вашего вебхука в Make (ЗАМЕНИТЕ НА СВОЙ!)
 MAKE_WEBHOOK_URL = "https://hook.eu2.make.com/2rcn5ksonlssc9dbk5tnvrcm39kgq86m"
