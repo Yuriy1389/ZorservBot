@@ -243,10 +243,16 @@ async def start(update: Update, context: CallbackContext) -> int:
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    # Пытаемся отправить фото
-    if os.path.exists("media/welcome.jpg.mp4"):
+    # Сначала отправляем приветствие
+    await update.message.reply_text(
+        TEXTS['ru']['welcome'],
+        parse_mode='HTML'
+    )
+
+    # Затем отправляем выбор языка с картинкой
+    if os.path.exists("media/welcome.jpg"):
         try:
-            with open("media/welcome.jpg.mp4", "rb") as photo:
+            with open("media/welcome.jpg", "rb") as photo:
                 await update.message.reply_photo(
                     photo=photo,
                     caption=TEXTS['ru']['select_language'],
@@ -254,7 +260,7 @@ async def start(update: Update, context: CallbackContext) -> int:
                     parse_mode='HTML'
                 )
         except Exception as e:
-            logger.error(f"Ошибка загрузки welcome.jpg.mp4: {e}")
+            logger.error(f"Ошибка загрузки welcome.jpg: {e}")
             await update.message.reply_text(
                 TEXTS['ru']['select_language'],
                 reply_markup=reply_markup,
