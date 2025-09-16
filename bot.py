@@ -1,6 +1,8 @@
 import os 
 import logging
 import sqlite3
+import asyncio
+import requests
 from datetime import datetime, time
 import pytz
 from telegram import (
@@ -22,6 +24,9 @@ from telegram.ext import (
     filters,
     CallbackQueryHandler
 )
+from flask import Flask
+from threading import Thread
+import time as time_module
 
 # Настройка логгирования
 logging.basicConfig(
@@ -35,17 +40,18 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Конфигурация
-TOKEN = os.getenv("BOT_TOKEN")   # теперь берём токен из переменной окружения
+TOKEN = os.getenv("BOT_TOKEN")
 if not TOKEN:
     raise ValueError("❌ Не найден BOT_TOKEN в окружении. Задай его через fly secrets set BOT_TOKEN=...")
 
+PORT = int(os.environ.get('PORT', 8080))
+
 ADMIN_CHAT_ID = 1838738269
-MAX_PHOTO_SIZE = 20 * 1024 * 1024  # 20MB
-MAX_VIDEO_SIZE = 50 * 1024 * 1024  # 50MB
+MAX_PHOTO_SIZE = 20 * 1024 * 1024
+MAX_VIDEO_SIZE = 50 * 1024 * 1024
 MOSCOW_TZ = pytz.timezone('Europe/Moscow')
 
-
-# URL вашего вебхука в Make (ЗАМЕНИТЕ НА СВОЙ!)
+# URL вашего вебхука в Make
 MAKE_WEBHOOK_URL = "https://hook.eu2.make.com/2rcn5ksonlssc9dbk5tnvrcm39kgq86m"
 
 # Состояния диалога
@@ -116,26 +122,11 @@ TECH_TYPES = {
     ]
 }
 
-# Flask app для UptimeRobot
-app = Flask('')
-
-@app.route('/')
-def home():
-    return "✅ Bot is alive and running!"
-
-def run():
-    app.run(host='0.0.0.0', port=8080)
-
-def keep_alive():
-    t = Thread(target=run)
-    t.start()
-
 def init_db():
-    """Инициализация базы данных с проверкой существования столбцов"""
+    """Инициализация базы данных"""
     conn = sqlite3.connect('orders.db')
     c = conn.cursor()
 
-    # Создаем таблицу orders, если не существует
     c.execute('''CREATE TABLE IF NOT EXISTS orders
                  (id INTEGER PRIMARY KEY AUTOINCREMENT,
                   order_number TEXT NOT NULL,
@@ -143,19 +134,12 @@ def init_db():
                   username TEXT,
                   name TEXT,
                   phone TEXT,
+                  tech_type TEXT,
                   problem TEXT,
                   media_files TEXT,
+                  language TEXT,
                   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
 
-    # Проверяем существование столбца tech_type
-    c.execute("PRAGMA table_info(orders)")
-    columns = [column[1] for column in c.fetchall()]
-    if 'tech_type' not in columns:
-        c.execute("ALTER TABLE orders ADD COLUMN tech_type TEXT")
-    if 'language' not in columns:
-        c.execute("ALTER TABLE orders ADD COLUMN language TEXT")
-
-    # Создаем таблицу counters, если не существует
     c.execute('''CREATE TABLE IF NOT EXISTS counters
                  (id INTEGER PRIMARY KEY,
                   last_order_number INTEGER,
@@ -203,7 +187,6 @@ def get_next_order_number():
 async def send_to_make_webhook(order_data):
     """Отправка данных заявки в Make"""
     try:
-        # Правильный формат данных для Make
         make_payload = {
             "chat_id": order_data.get("user_id", 0),
             "username": order_data.get("username", "Не указано"),
@@ -217,7 +200,6 @@ async def send_to_make_webhook(order_data):
             "source": "telegram_bot"
         }
 
-        # Убедимся, что все значения строковые
         for key, value in make_payload.items():
             if value is None:
                 make_payload[key] = ""
@@ -278,14 +260,12 @@ async def start(update: Update, context: CallbackContext) -> int:
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     try:
-        with open("media/welcome.jpg.mp4", "rb") as photo:
-            await update.message.reply_photo(
-                photo=InputFile(photo),
-                caption=TEXTS['ru']['select_language'],
-                reply_markup=reply_markup
-            )
+        await update.message.reply_text(
+            TEXTS['ru']['select_language'],
+            reply_markup=reply_markup
+        )
     except Exception as e:
-        logger.error(f"Ошибка загрузки welcome.jpg: {e}")
+        logger.error(f"Ошибка: {e}")
         await update.message.reply_text(
             TEXTS['ru']['select_language'],
             reply_markup=reply_markup
@@ -513,7 +493,6 @@ async def send_to_admin(update: Update, context: CallbackContext) -> int:
         }
 
         # Отправляем данные в Make
-        import asyncio
         asyncio.create_task(send_to_make_webhook(make_data))
 
         # Отправка медиафайлов администратору
@@ -539,14 +518,12 @@ async def send_to_admin(update: Update, context: CallbackContext) -> int:
                     try:
                         with open(file_path, 'rb') as file:
                             if filename.endswith('.jpg'):
-                                # Добавляем текст только к первому фото
                                 caption = admin_text if i == 0 else ""
                                 media_group.append(InputMediaPhoto(
                                     media=file,
                                     caption=caption
                                 ))
                             elif filename.endswith('.mp4'):
-                                # Добавляем текст только к первому видео
                                 caption = admin_text if i == 0 else ""
                                 media_group.append(InputMediaVideo(
                                     media=file,
@@ -561,7 +538,6 @@ async def send_to_admin(update: Update, context: CallbackContext) -> int:
                         media=media_group,
                         disable_notification=True
                     )
-                    # Отправляем кнопку отдельным сообщением
                     await context.bot.send_message(
                         chat_id=ADMIN_CHAT_ID,
                         text="📨 Связь с пользователем:",
@@ -569,14 +545,12 @@ async def send_to_admin(update: Update, context: CallbackContext) -> int:
                     )
             except Exception as e:
                 logger.error(f"Ошибка отправки медиагруппы: {e}")
-                # Если не удалось отправить медиа, отправляем текстовое сообщение с кнопкой
                 await context.bot.send_message(
                     chat_id=ADMIN_CHAT_ID,
                     text=admin_text + "\n\n⚠ Не удалось отправить вложения",
                     reply_markup=keyboard
                 )
         else:
-            # Если нет медиафайлов, отправляем одно текстовое сообщение с кнопкой
             await context.bot.send_message(
                 chat_id=ADMIN_CHAT_ID,
                 text=admin_text,
@@ -584,19 +558,10 @@ async def send_to_admin(update: Update, context: CallbackContext) -> int:
             )
 
         # Подтверждение пользователю
-        try:
-            with open("media/goodbye.jpg", 'rb') as photo:
-                await update.message.reply_photo(
-                    photo=photo,
-                    caption=TEXTS[language]['success'].format(order_number=order_number),
-                    reply_markup=get_keyboard([TEXTS[language]['back']], language)
-                )
-        except Exception as e:
-            logger.error(f"Ошибка отправки фото: {e}")
-            await update.message.reply_text(
-                TEXTS[language]['success'].format(order_number=order_number),
-                reply_markup=get_keyboard([TEXTS[language]['back']], language)
-            )
+        await update.message.reply_text(
+            TEXTS[language]['success'].format(order_number=order_number),
+            reply_markup=get_keyboard([TEXTS[language]['back']], language)
+        )
 
     except Exception as e:
         logger.error(f"Критическая ошибка: {e}")
@@ -665,61 +630,77 @@ async def contacts(update: Update, context: CallbackContext) -> None:
         reply_markup=get_keyboard([TEXTS[language]['back']], language)
     )
 
+def run_bot():
+    """Запуск бота в отдельном потоке"""
+    try:
+        init_db()
+        application = Application.builder().token(TOKEN).build()
+
+        # Очистка медиафайлов каждый день в 23:00
+        cleanup_time = time(23, 0, tzinfo=MOSCOW_TZ)
+        application.job_queue.run_daily(
+            cleanup_media,
+            time=cleanup_time,
+            days=(0, 1, 2, 3, 4, 5, 6),
+            name="daily_media_cleanup"
+        )
+
+        # Обработчики команд
+        conv_handler = ConversationHandler(
+            entry_points=[CommandHandler('start', start)],
+            states={
+                MAIN_MENU: [
+                    CallbackQueryHandler(language_choice, pattern='^lang_'),
+                ],
+                GET_NAME: [
+                    MessageHandler(filters.TEXT & ~filters.COMMAND, get_name),
+                ],
+                GET_PHONE: [
+                    MessageHandler(filters.TEXT | filters.CONTACT, get_phone),
+                ],
+                GET_TECH_TYPE: [
+                    MessageHandler(filters.TEXT & ~filters.COMMAND, get_tech_type),
+                ],
+                GET_PROBLEM: [
+                    MessageHandler(filters.TEXT & ~filters.COMMAND, get_problem),
+                ],
+                GET_MEDIA: [
+                    MessageHandler(filters.PHOTO | filters.VIDEO, handle_media),
+                    MessageHandler(filters.TEXT & ~filters.COMMAND, confirm_data),
+                ],
+                CONFIRM: [
+                    MessageHandler(filters.Regex('^(✅ Да, всё верно|✅ Ha, hammasi to\'g\'ri)$'), send_to_admin),
+                    MessageHandler(filters.Regex('^(❌ Нет, изменить данные|❌ Yo\'q, o\'zgartirmoqchiman)$'), start),
+                ],
+            },
+            fallbacks=[CommandHandler('cancel', cancel)],
+            allow_reentry=True
+        )
+
+        application.add_handler(conv_handler)
+        application.add_handler(MessageHandler(filters.Regex('^↩️ Назад$') | filters.Regex('^↩️ Orqaga$'), cancel))
+        application.add_handler(MessageHandler(filters.Regex('^ℹ️ О сервисе$'), about))
+        application.add_handler(MessageHandler(filters.Regex('^📞 Контакты$'), contacts))
+
+        application.run_polling()
+    except Exception as e:
+        logger.error(f"Ошибка запуска бота: {e}")
+
 def main():
-    """Запуск бота"""
-    keep_alive()  # Запускаем Flask-сервер для UptimeRobot
-    init_db()
+    """Основная функция запуска"""
+    # Запускаем бота в отдельном потоке
+    bot_thread = Thread(target=run_bot, daemon=True)
+    bot_thread.start()
 
-    application = Application.builder().token(TOKEN).build()
+    # Создаем и запускаем Flask сервер для health check
+    app = Flask(__name__)
 
-    # Очистка медиафайлов каждый день в 23:00
-    cleanup_time = time(23, 0, tzinfo=MOSCOW_TZ)
-    application.job_queue.run_daily(
-        cleanup_media,
-        time=cleanup_time,
-        days=(0, 1, 2, 3, 4, 5, 6),
-        name="daily_media_cleanup"
-    )
+    @app.route('/')
+    def health_check():
+        return "✅ Bot is alive and running!"
 
-    # Обработчики команд
-    conv_handler = ConversationHandler(
-        entry_points=[CommandHandler('start', start)],
-        states={
-            MAIN_MENU: [
-                CallbackQueryHandler(language_choice, pattern='^lang_'),
-                MessageHandler(filters.Regex('^ℹ️ О сервисе$') | filters.Regex('^📞 Контакты$'), about),
-            ],
-            GET_NAME: [
-                MessageHandler(filters.TEXT & ~filters.COMMAND, get_name),
-            ],
-            GET_PHONE: [
-                MessageHandler(filters.TEXT | filters.CONTACT, get_phone),
-            ],
-            GET_TECH_TYPE: [
-                MessageHandler(filters.TEXT & ~filters.COMMAND, get_tech_type),
-            ],
-            GET_PROBLEM: [
-                MessageHandler(filters.TEXT & ~filters.COMMAND, get_problem),
-            ],
-            GET_MEDIA: [
-                MessageHandler(filters.PHOTO | filters.VIDEO, handle_media),
-                MessageHandler(filters.TEXT & ~filters.COMMAND, confirm_data),
-            ],
-            CONFIRM: [
-                MessageHandler(filters.Regex('^(✅ Да, всё верно|✅ Ha, hammasi to\'g\'ri)$'), send_to_admin),
-                MessageHandler(filters.Regex('^(❌ Нет, изменить данные|❌ Yo\'q, o\'zgartirmoqchiman)$'), start),
-            ],
-        },
-        fallbacks=[CommandHandler('cancel', cancel)],
-        allow_reentry=True
-    )
-
-    application.add_handler(conv_handler)
-    application.add_handler(MessageHandler(filters.Regex('^↩️ Назад$') | filters.Regex('^↩️ Orqaga$'), cancel))
-    application.add_handler(MessageHandler(filters.Regex('^ℹ️ О сервисе$') | filters.Regex('^📞 Контакты$'), about))
-
-    application.run_polling()
+    # Запускаем Flask сервер
+    app.run(host='0.0.0.0', port=PORT, debug=False, use_reloader=False)
 
 if __name__ == '__main__':
     main()
-# trigger deploy
