@@ -53,7 +53,7 @@ user_data = {}
 # Тексты на разных языках
 TEXTS = {
     'ru': {
-        'welcome': "👋 <b>Здравствуйте, меня зовут Zorservbot!</b>\n\nЯ помогу оформить Вам заказ!",
+        'welcome': "👋 <b>Здравствуйте, я бот-помошник!</b>\n\nЯ помогу оформить Вам заказ!",
         'select_language': "🌐 <b>Выберите язык:</b>",
         'enter_name': "👤 <b>Введите ваше имя:</b>",
         'enter_phone': "📞 <b>Введите ваш номер телефона:</b>\n\nИли нажмите кнопку ниже:",
@@ -74,7 +74,7 @@ TEXTS = {
         'cancel': "❌ Действие отменено. Чем ещё могу помочь?"
      },
     'uz': {
-        'welcome': "👋 <b>Salom, mening ismim Zorservbot!</b>\n\nMen sizga buyurtma berishga yordam beraman!",
+        'welcome': "👋 <b>Salom, men yordamchi botman!</b>\n\nMen sizga buyurtma berishga yordam beraman!",
         'select_language': "🌐 <b>Tilni tanlang:</b>",
         'enter_name': "👤 <b>Ismingizni kiriting:</b>",
         'enter_phone': "📞 <b>Telefon raqamingizni kiriting:</b>\n\nYoki quyidagi tugmani bosing:",
@@ -250,9 +250,9 @@ async def start(update: Update, context: CallbackContext) -> int:
     )
 
     # Затем отправляем выбор языка с картинкой
-    if os.path.exists("media/welcome.jpg"):
+    if os.path.exists("media/welcome.jpg.mp4"):
         try:
-            with open("media/welcome.jpg", "rb") as photo:
+            with open("media/welcome.jpg.mp4", "rb") as photo:
                 await update.message.reply_photo(
                     photo=photo,
                     caption=TEXTS['ru']['select_language'],
