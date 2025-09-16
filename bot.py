@@ -44,7 +44,7 @@ MAKE_WEBHOOK_URL = "https://hook.eu2.make.com/2rcn5ksonlssc9dbk5tnvrcm39kgq86m"
 (MAIN_MENU, GET_NAME, GET_PHONE, GET_TECH_TYPE, GET_PROBLEM, GET_MEDIA, CONFIRM) = range(7)
 
 # Папки для хранения данных
-MEDIA_DIR = "media"
+MEDIA_DIR = "user_media"
 os.makedirs(MEDIA_DIR, exist_ok=True)
 
 # Глобальные переменные
@@ -53,8 +53,7 @@ user_data = {}
 # Тексты на разных языках
 TEXTS = {
     'ru': {
-        'welcome': "👋 <b>Здравствуйте, я бот-помошник!</b>\n\nЯ помогу оформить Вам заказ!",
-        'select_language': "🌐 <b>Выберите язык:</b>",
+        'welcome': "👋 <b>Здравствуйте, меня зовут Zorservbot!</b>\n\nЯ помогу оформить Вам заказ!\n\n🌐 <b>Выберите язык:</b>",
         'enter_name': "👤 <b>Введите ваше имя:</b>",
         'enter_phone': "📞 <b>Введите ваш номер телефона:</b>\n\nИли нажмите кнопку ниже:",
         'select_tech': "🛠 <b>Выберите тип техники:</b>",
@@ -71,11 +70,11 @@ TEXTS = {
         'error': "❌ Произошла ошибка при обработке вашей заявки. Пожалуйста, попробуйте позже.",
         'back': "↩️ Назад",
         'skip': "⏭ Пропустить",
-        'cancel': "❌ Действие отменено. Чем ещё могу помочь?"
-     },
+        'cancel': "❌ Действие отменено. Чем ещё могу помочь?",
+        'start_again': "🔄 Начать заново"
+    },
     'uz': {
-        'welcome': "👋 <b>Salom, men yordamchi botman!</b>\n\nMen sizga buyurtma berishga yordam beraman!",
-        'select_language': "🌐 <b>Tilni tanlang:</b>",
+        'welcome': "👋 <b>Salom, mening ismim Zorservbot!</b>\n\nMen sizga buyurtma berishga yordam beraman!\n\n🌐 <b>Tilni tanlang:</b>",
         'enter_name': "👤 <b>Ismingizni kiriting:</b>",
         'enter_phone': "📞 <b>Telefon raqamingizni kiriting:</b>\n\nYoki quyidagi tugmani bosing:",
         'select_tech': "🛠 <b>Texnika turini tanlang:</b>",
@@ -92,7 +91,8 @@ TEXTS = {
         'error': "❌ Arizangizni qayta ishlashda xatolik yuz berdi. Iltimos, keyinroq urinib ko'ring.",
         'back': "↩️ Orqaga",
         'skip': "⏭ O'tkazish",
-        'cancel': "❌ Harakat bekor qilindi. Yana qanday yordam bera olaman?"
+        'cancel': "❌ Harakat bekor qilindi. Yana qanday yordam bera olaman?",
+        'start_again': "🔄 Qayta boshlash"
     }
 }
 
@@ -235,6 +235,12 @@ def contact_keyboard(language='ru'):
         [KeyboardButton(text)]
     ], resize_keyboard=True)
 
+def start_keyboard(language='ru'):
+    """Клавиатура для кнопки Старт"""
+    return ReplyKeyboardMarkup([
+        [KeyboardButton("/start")]
+    ], resize_keyboard=True)
+
 async def start(update: Update, context: CallbackContext) -> int:
     """Начало диалога, выбор языка"""
     keyboard = [
@@ -243,32 +249,26 @@ async def start(update: Update, context: CallbackContext) -> int:
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    # Сначала отправляем приветствие
-    await update.message.reply_text(
-        TEXTS['ru']['welcome'],
-        parse_mode='HTML'
-    )
-
-    # Затем отправляем выбор языка с картинкой
-    if os.path.exists("media/welcome.jpg.mp4"):
+    # Отправляем приветствие с выбором языка
+    if os.path.exists("media/welcome.jpg"):
         try:
-            with open("media/welcome.jpg.mp4", "rb") as photo:
+            with open("media/welcome.jpg", "rb") as photo:
                 await update.message.reply_photo(
                     photo=photo,
-                    caption=TEXTS['ru']['select_language'],
+                    caption=TEXTS['ru']['welcome'],
                     reply_markup=reply_markup,
                     parse_mode='HTML'
                 )
         except Exception as e:
             logger.error(f"Ошибка загрузки welcome.jpg: {e}")
             await update.message.reply_text(
-                TEXTS['ru']['select_language'],
+                TEXTS['ru']['welcome'],
                 reply_markup=reply_markup,
                 parse_mode='HTML'
             )
     else:
         await update.message.reply_text(
-            TEXTS['ru']['select_language'],
+            TEXTS['ru']['welcome'],
             reply_markup=reply_markup,
             parse_mode='HTML'
         )
@@ -504,27 +504,27 @@ async def send_to_admin(update: Update, context: CallbackContext) -> int:
             reply_markup=keyboard
         )
 
-        # Подтверждение пользователю
+        # Подтверждение пользователю с кнопкой Старт
         if os.path.exists("media/goodbye.jpg"):
             try:
                 with open("media/goodbye.jpg", 'rb') as photo:
                     await update.message.reply_photo(
                         photo=photo,
                         caption=TEXTS[language]['success'].format(order_number=order_number),
-                        reply_markup=get_keyboard([TEXTS[language]['back']], language),
+                        reply_markup=start_keyboard(language),
                         parse_mode='HTML'
                     )
             except Exception as e:
                 logger.error(f"Ошибка отправки фото: {e}")
                 await update.message.reply_text(
                     TEXTS[language]['success'].format(order_number=order_number),
-                    reply_markup=get_keyboard([TEXTS[language]['back']], language),
+                    reply_markup=start_keyboard(language),
                     parse_mode='HTML'
                 )
         else:
             await update.message.reply_text(
                 TEXTS[language]['success'].format(order_number=order_number),
-                reply_markup=get_keyboard([TEXTS[language]['back']], language),
+                reply_markup=start_keyboard(language),
                 parse_mode='HTML'
             )
 
@@ -532,7 +532,7 @@ async def send_to_admin(update: Update, context: CallbackContext) -> int:
         logger.error(f"Критическая ошибка: {e}")
         await update.message.reply_text(
             TEXTS[language]['error'],
-            reply_markup=get_keyboard([TEXTS[language]['back']], language),
+            reply_markup=start_keyboard(language),
             parse_mode='HTML'
         )
     finally:
@@ -545,7 +545,7 @@ async def send_to_admin(update: Update, context: CallbackContext) -> int:
                     pass
             del user_data[user_id]
 
-    return MAIN_MENU
+    return ConversationHandler.END
 
 async def cancel(update: Update, context: CallbackContext) -> int:
     """Отмена текущего действия"""
@@ -562,10 +562,10 @@ async def cancel(update: Update, context: CallbackContext) -> int:
 
     await update.message.reply_text(
         TEXTS[language]['cancel'],
-        reply_markup=get_keyboard([TEXTS[language]['back']], language),
+        reply_markup=start_keyboard(language),
         parse_mode='HTML'
     )
-    return MAIN_MENU
+    return ConversationHandler.END
 
 def main():
     """Основная функция запуска"""
