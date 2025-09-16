@@ -53,7 +53,7 @@ user_data = {}
 # Тексты на разных языках
 TEXTS = {
     'ru': {
-        'welcome': "🔧 <b>Добро пожаловать в сервисный центр!</b>\n\nВыберите действие:",
+        'welcome': "👋 <b>Здравствуйте, меня зовут Zorservbot!</b>\n\nЯ помогу оформить Вам заказ!",
         'select_language': "🌐 <b>Выберите язык:</b>",
         'enter_name': "👤 <b>Введите ваше имя:</b>",
         'enter_phone': "📞 <b>Введите ваш номер телефона:</b>\n\nИли нажмите кнопку ниже:",
@@ -72,9 +72,9 @@ TEXTS = {
         'back': "↩️ Назад",
         'skip': "⏭ Пропустить",
         'cancel': "❌ Действие отменено. Чем ещё могу помочь?"
-    },
+     },
     'uz': {
-        'welcome': "🔧 <b>Xizmat markaziga xush kelibsiz!</b>\n\nHarakatni tanlang:",
+        'welcome': "👋 <b>Salom, mening ismim Zorservbot!</b>\n\nMen sizga buyurtma berishga yordam beraman!",
         'select_language': "🌐 <b>Tilni tanlang:</b>",
         'enter_name': "👤 <b>Ismingizni kiriting:</b>",
         'enter_phone': "📞 <b>Telefon raqamingizni kiriting:</b>\n\nYoki quyidagi tugmani bosing:",
