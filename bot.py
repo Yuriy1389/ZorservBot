@@ -3,11 +3,10 @@ import logging
 import sqlite3
 import asyncio
 import requests
-from datetime import datetime, time
+from datetime import datetime
 import pytz
 from telegram import (
     Update,
-    InputFile,
     InputMediaPhoto,
     InputMediaVideo,
     ReplyKeyboardMarkup,
@@ -25,33 +24,22 @@ from telegram.ext import (
     CallbackQueryHandler
 )
 from flask import Flask
-from threading import Thread
-import time as time_module
 
 # Настройка логгирования
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('bot.log'),
-        logging.StreamHandler()
-    ]
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
 
 # Конфигурация
 TOKEN = os.getenv("BOT_TOKEN")
 if not TOKEN:
-    raise ValueError("❌ Не найден BOT_TOKEN в окружении. Задай его через fly secrets set BOT_TOKEN=...")
+    raise ValueError("❌ Не найден BOT_TOKEN в окружении")
 
 PORT = int(os.environ.get('PORT', 8080))
-
 ADMIN_CHAT_ID = 1838738269
-MAX_PHOTO_SIZE = 20 * 1024 * 1024
-MAX_VIDEO_SIZE = 50 * 1024 * 1024
 MOSCOW_TZ = pytz.timezone('Europe/Moscow')
-
-# URL вашего вебхука в Make
 MAKE_WEBHOOK_URL = "https://hook.eu2.make.com/2rcn5ksonlssc9dbk5tnvrcm39kgq86m"
 
 # Состояния диалога
@@ -60,7 +48,6 @@ MAKE_WEBHOOK_URL = "https://hook.eu2.make.com/2rcn5ksonlssc9dbk5tnvrcm39kgq86m"
 # Папки для хранения данных
 MEDIA_DIR = "user_media"
 os.makedirs(MEDIA_DIR, exist_ok=True)
-os.makedirs("media", exist_ok=True)
 
 # Глобальные переменные
 user_data = {}
@@ -240,17 +227,6 @@ def contact_keyboard(language='ru'):
         [KeyboardButton(text)]
     ], resize_keyboard=True)
 
-async def cleanup_media(context: CallbackContext):
-    """Очистка папки с медиа"""
-    logger.info("Очистка папки user_media")
-    for filename in os.listdir(MEDIA_DIR):
-        file_path = os.path.join(MEDIA_DIR, filename)
-        try:
-            os.remove(file_path)
-            logger.info(f"Удален файл: {filename}")
-        except Exception as e:
-            logger.error(f"Ошибка удаления файла {filename}: {e}")
-
 async def start(update: Update, context: CallbackContext) -> int:
     """Начало диалога, выбор языка"""
     keyboard = [
@@ -259,17 +235,10 @@ async def start(update: Update, context: CallbackContext) -> int:
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    try:
-        await update.message.reply_text(
-            TEXTS['ru']['select_language'],
-            reply_markup=reply_markup
-        )
-    except Exception as e:
-        logger.error(f"Ошибка: {e}")
-        await update.message.reply_text(
-            TEXTS['ru']['select_language'],
-            reply_markup=reply_markup
-        )
+    await update.message.reply_text(
+        TEXTS['ru']['select_language'],
+        reply_markup=reply_markup
+    )
     return MAIN_MENU
 
 async def language_choice(update: Update, context: CallbackContext) -> int:
@@ -281,18 +250,10 @@ async def language_choice(update: Update, context: CallbackContext) -> int:
     language = query.data.split('_')[1]
     user_data[user_id] = {'language': language, 'step': 'name'}
 
-    try:
-        await query.edit_message_text(
-            text=TEXTS[language]['enter_name'],
-            reply_markup=None
-        )
-    except Exception as e:
-        logger.error(f"Ошибка при редактировании сообщения: {e}")
-        await context.bot.send_message(
-            chat_id=query.message.chat_id,
-            text=TEXTS[language]['enter_name']
-        )
-
+    await query.edit_message_text(
+        text=TEXTS[language]['enter_name'],
+        reply_markup=None
+    )
     return GET_NAME
 
 async def get_name(update: Update, context: CallbackContext) -> int:
@@ -382,20 +343,8 @@ async def handle_media(update: Update, context: CallbackContext) -> int:
 
     try:
         await file.download_to_drive(file_path)
-
-        file_size = os.path.getsize(file_path)
-        if (ext == "jpg" and file_size > MAX_PHOTO_SIZE) or (ext == "mp4" and file_size > MAX_VIDEO_SIZE):
-            os.remove(file_path)
-            size_limit = "20MB" if ext == "jpg" else "50MB"
-            await update.message.reply_text(
-                f"⚠ Файл слишком большой. Максимальный размер: {size_limit}",
-                reply_markup=get_keyboard([TEXTS[language]['skip'], TEXTS[language]['back']], language)
-            )
-            return GET_MEDIA
-
         user_data[user_id].setdefault('media', []).append(filename)
-        logger.info(f"Сохранен файл: {filename} ({file_size/1024:.1f}KB)")
-
+        
         remaining = 10 - len(user_data[user_id]['media'])
         if remaining > 0:
             await update.message.reply_text(
@@ -449,17 +398,6 @@ async def send_to_admin(update: Update, context: CallbackContext) -> int:
         language = user_data[user_id].get('language', 'ru')
         order_number = get_next_order_number()
 
-        admin_text = (
-            f"🚨 Новая заявка #{order_number}\n"
-            f"👤 Имя: {user_data[user_id].get('name', 'Не указано')}\n"
-            f"📞 Телефон: {user_data[user_id].get('phone', 'Не указано')}\n"
-            f"🛠 Тип техники: {user_data[user_id].get('tech_type', 'Не указано')}\n"
-            f"❗ Проблема: {user_data[user_id].get('problem', 'Не указано')}\n"
-            f"🌐 Язык: {language}\n"
-            f"📷 Медиафайлов: {len(user_data[user_id].get('media', []))} шт\n"
-            f"🕒 Время: {datetime.now(MOSCOW_TZ).strftime('%H:%M %d.%m.%Y')}"
-        )
-
         # Сохраняем в базу данных
         conn = sqlite3.connect('orders.db')
         c = conn.cursor()
@@ -478,7 +416,7 @@ async def send_to_admin(update: Update, context: CallbackContext) -> int:
         conn.commit()
         conn.close()
 
-        # Подготавливаем данные для отправки в Make
+        # Отправляем данные в Make
         make_data = {
             "order_number": order_number,
             "user_id": user_id,
@@ -492,70 +430,7 @@ async def send_to_admin(update: Update, context: CallbackContext) -> int:
             "source": "telegram_bot"
         }
 
-        # Отправляем данные в Make
         asyncio.create_task(send_to_make_webhook(make_data))
-
-        # Отправка медиафайлов администратору
-        media_files = user_data[user_id].get('media', [])
-
-        # Кнопка для связи с пользователем
-        keyboard = InlineKeyboardMarkup([
-            [InlineKeyboardButton(
-                "📨 Написать пользователю",
-                url=f"https://t.me/{update.effective_user.username}"
-                if update.effective_user.username
-                else f"tg://user?id={user_id}"
-            )]
-        ])
-
-        if media_files:
-            try:
-                media_group = []
-                for i, filename in enumerate(media_files[:10]):
-                    file_path = os.path.join(MEDIA_DIR, filename)
-                    if not os.path.exists(file_path):
-                        continue
-                    try:
-                        with open(file_path, 'rb') as file:
-                            if filename.endswith('.jpg'):
-                                caption = admin_text if i == 0 else ""
-                                media_group.append(InputMediaPhoto(
-                                    media=file,
-                                    caption=caption
-                                ))
-                            elif filename.endswith('.mp4'):
-                                caption = admin_text if i == 0 else ""
-                                media_group.append(InputMediaVideo(
-                                    media=file,
-                                    caption=caption
-                                ))
-                    except Exception as e:
-                        logger.error(f"Ошибка обработки {filename}: {e}")
-
-                if media_group:
-                    await context.bot.send_media_group(
-                        chat_id=ADMIN_CHAT_ID,
-                        media=media_group,
-                        disable_notification=True
-                    )
-                    await context.bot.send_message(
-                        chat_id=ADMIN_CHAT_ID,
-                        text="📨 Связь с пользователем:",
-                        reply_markup=keyboard
-                    )
-            except Exception as e:
-                logger.error(f"Ошибка отправки медиагруппы: {e}")
-                await context.bot.send_message(
-                    chat_id=ADMIN_CHAT_ID,
-                    text=admin_text + "\n\n⚠ Не удалось отправить вложения",
-                    reply_markup=keyboard
-                )
-        else:
-            await context.bot.send_message(
-                chat_id=ADMIN_CHAT_ID,
-                text=admin_text,
-                reply_markup=keyboard
-            )
 
         # Подтверждение пользователю
         await update.message.reply_text(
@@ -575,8 +450,8 @@ async def send_to_admin(update: Update, context: CallbackContext) -> int:
             for filename in user_data[user_id].get('media', []):
                 try:
                     os.remove(os.path.join(MEDIA_DIR, filename))
-                except Exception as e:
-                    logger.error(f"Ошибка удаления файла {filename}: {e}")
+                except:
+                    pass
             del user_data[user_id]
 
     return MAIN_MENU
@@ -590,8 +465,8 @@ async def cancel(update: Update, context: CallbackContext) -> int:
         for filename in user_data[user_id].get('media', []):
             try:
                 os.remove(os.path.join(MEDIA_DIR, filename))
-            except Exception as e:
-                logger.error(f"Ошибка удаления файла {filename}: {e}")
+            except:
+                pass
         del user_data[user_id]
 
     await update.message.reply_text(
@@ -600,75 +475,21 @@ async def cancel(update: Update, context: CallbackContext) -> int:
     )
     return MAIN_MENU
 
-async def about(update: Update, context: CallbackContext) -> None:
-    """Информация о сервисе"""
-    user_id = update.effective_user.id
-    language = user_data.get(user_id, {}).get('language', 'ru')
-
-    text = {
-        'ru': "🔧 О нашем сервисе:\n\n• Профессиональный ремонт бытовой техники\n• Официальная гарантия до 2 лет\n• Выезд мастера в день обращения\n• Оригинальные запчасти\n\n⏰ Часы работы: Пн-Пт 9:00-18:00",
-        'uz': "🔧 Bizning xizmatimiz haqida:\n\n• Maishiy texnikani professional ta'mirlash\n• 2 yilgacha rasmiy kafolat\n• Masterning xizmat kuni ichida kelishi\n• Original ehtiyot qismlar\n\n⏰ Ish vaqti: Dush-Jum 9:00-18:00"
-    }
-
-    await update.message.reply_text(
-        text[language],
-        reply_markup=get_keyboard([TEXTS[language]['back']], language)
-    )
-
-async def contacts(update: Update, context: CallbackContext) -> None:
-    """Контактная информация"""
-    user_id = update.effective_user.id
-    language = user_data.get(user_id, {}).get('language', 'ru')
-
-    text = {
-        'ru': "📞 Наши контакты:\n\n📍 Адрес: г. Ташкент, ул. Олтин тепа 233\n☎ Телефон: +998884792901\n📧 Email: fixservise@sbk.ru\n🌐 Сайт: zorservice.uz\n\n🚗 Бесплатная парковка для клиентов",
-        'uz': "📞 Bizning kontaktlarimiz:\n\n📍 Manzil: Toshkent sh., Oltin tepa ko'chasi 233\n☎ Telefon: +998884792901\n📧 Email: fixservise@sbk.ru\n🌐 Vebsayt: zorservice.uz\n\n🚗 Mijozlar uchun bepul avtoturargoh"
-    }
-
-    await update.message.reply_text(
-        text[language],
-        reply_markup=get_keyboard([TEXTS[language]['back']], language)
-    )
-
-def run_bot():
-    """Запуск бота в отдельном потоке"""
+async def run_bot():
+    """Запуск бота"""
     try:
         init_db()
-        # Создаем Application с JobQueue
         application = Application.builder().token(TOKEN).build()
-
-        # Проверяем, что job_queue доступен
-        if hasattr(application, 'job_queue') and application.job_queue:
-            # Очистка медиафайлов каждый день в 23:00
-            cleanup_time = time(23, 0, tzinfo=MOSCOW_TZ)
-            application.job_queue.run_daily(
-                cleanup_media,
-                time=cleanup_time,
-                days=(0, 1, 2, 3, 4, 5, 6),
-                name="daily_media_cleanup"
-            )
-        else:
-            logger.warning("JobQueue не доступен. Планировщик задач отключен.")
 
         # Обработчики команд
         conv_handler = ConversationHandler(
             entry_points=[CommandHandler('start', start)],
             states={
-                MAIN_MENU: [
-                    CallbackQueryHandler(language_choice, pattern='^lang_'),
-                ],
-                GET_NAME: [
-                    MessageHandler(filters.TEXT & ~filters.COMMAND, get_name),
-                ],
-                GET_PHONE: [
-                    MessageHandler(filters.TEXT | filters.CONTACT, get_phone),
-                ],
-                GET_TECH_TYPE: [
-                    MessageHandler(filters.TEXT & ~filters.COMMAND, get_tech_type),
-                ],
-                GET_PROBLEM: [
-                    MessageHandler(filters.TEXT & ~filters.COMMAND, get_problem),
-                ],
+                MAIN_MENU: [CallbackQueryHandler(language_choice, pattern='^lang_')],
+                GET_NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_name)],
+                GET_PHONE: [MessageHandler(filters.TEXT | filters.CONTACT, get_phone)],
+                GET_TECH_TYPE: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_tech_type)],
+                GET_PROBLEM: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_problem)],
                 GET_MEDIA: [
                     MessageHandler(filters.PHOTO | filters.VIDEO, handle_media),
                     MessageHandler(filters.TEXT & ~filters.COMMAND, confirm_data),
@@ -683,20 +504,24 @@ def run_bot():
         )
 
         application.add_handler(conv_handler)
-        application.add_handler(MessageHandler(filters.Regex('^↩️ Назад$') | filters.Regex('^↩️ Orqaga$'), cancel))
-        application.add_handler(MessageHandler(filters.Regex('^ℹ️ О сервисе$'), about))
-        application.add_handler(MessageHandler(filters.Regex('^📞 Контакты$'), contacts))
 
-        application.run_polling()
+        logger.info("Бот запускается...")
+        await application.initialize()
+        await application.start()
+        await application.updater.start_polling()
+        
+        logger.info("Бот успешно запущен!")
+        
+        # Бесконечный цикл чтобы бот не завершался
+        while True:
+            await asyncio.sleep(3600)  # Спим 1 час
+
     except Exception as e:
         logger.error(f"Ошибка запуска бота: {e}")
+        raise
 
 def main():
     """Основная функция запуска"""
-    # Запускаем бота в отдельном потоке
-    bot_thread = Thread(target=run_bot, daemon=True)
-    bot_thread.start()
-
     # Создаем и запускаем Flask сервер для health check
     app = Flask(__name__)
 
@@ -704,8 +529,33 @@ def main():
     def health_check():
         return "✅ Bot is alive and running!"
 
-    # Запускаем Flask сервер
-    app.run(host='0.0.0.0', port=PORT, debug=False, use_reloader=False)
+    @app.route('/health')
+    def health():
+        return "OK"
+
+    # Запускаем бота в asyncio event loop
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    
+    # Запускаем бота в фоновой задаче
+    bot_task = loop.create_task(run_bot())
+    
+    # Запускаем Flask в отдельном потоке
+    from threading import Thread
+    flask_thread = Thread(target=lambda: app.run(host='0.0.0.0', port=PORT, debug=False, use_reloader=False))
+    flask_thread.daemon = True
+    flask_thread.start()
+    
+    logger.info(f"Flask сервер запущен на порту {PORT}")
+    
+    try:
+        # Запускаем event loop
+        loop.run_forever()
+    except KeyboardInterrupt:
+        logger.info("Остановка бота...")
+    finally:
+        bot_task.cancel()
+        loop.close()
 
 if __name__ == '__main__':
     main()
