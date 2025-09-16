@@ -235,10 +235,19 @@ async def start(update: Update, context: CallbackContext) -> int:
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    await update.message.reply_text(
-        TEXTS['ru']['select_language'],
-        reply_markup=reply_markup
-    )
+    try:
+        with open("media/welcome.jpg", "rb") as photo:
+            await update.message.reply_photo(
+                photo=photo,
+                caption=TEXTS['ru']['select_language'],
+                reply_markup=reply_markup
+            )
+    except Exception as e:
+        logger.error(f"Ошибка загрузки welcome.jpg: {e}")
+        await update.message.reply_text(
+            TEXTS['ru']['select_language'],
+            reply_markup=reply_markup
+        )
     return MAIN_MENU
 
 async def language_choice(update: Update, context: CallbackContext) -> int:
@@ -398,6 +407,17 @@ async def send_to_admin(update: Update, context: CallbackContext) -> int:
         language = user_data[user_id].get('language', 'ru')
         order_number = get_next_order_number()
 
+        admin_text = (
+            f"🚨 Новая заявка #{order_number}\n"
+            f"👤 Имя: {user_data[user_id].get('name', 'Не указано')}\n"
+            f"📞 Телефон: {user_data[user_id].get('phone', 'Не указано')}\n"
+            f"🛠 Тип техники: {user_data[user_id].get('tech_type', 'Не указано')}\n"
+            f"❗ Проблема: {user_data[user_id].get('problem', 'Не указано')}\n"
+            f"🌐 Язык: {language}\n"
+            f"📷 Медиафайлов: {len(user_data[user_id].get('media', []))} шт\n"
+            f"🕒 Время: {datetime.now(MOSCOW_TZ).strftime('%H:%M %d.%m.%Y')}"
+        )
+
         # Сохраняем в базу данных
         conn = sqlite3.connect('orders.db')
         c = conn.cursor()
@@ -416,7 +436,7 @@ async def send_to_admin(update: Update, context: CallbackContext) -> int:
         conn.commit()
         conn.close()
 
-        # Отправляем данные в Make
+        # Подготавливаем данные для отправки в Make
         make_data = {
             "order_number": order_number,
             "user_id": user_id,
@@ -430,13 +450,89 @@ async def send_to_admin(update: Update, context: CallbackContext) -> int:
             "source": "telegram_bot"
         }
 
+        # Отправляем данные в Make
         asyncio.create_task(send_to_make_webhook(make_data))
 
+        # Отправка медиафайлов администратору
+        media_files = user_data[user_id].get('media', [])
+
+        # Кнопка для связи с пользователем
+        keyboard = InlineKeyboardMarkup([
+            [InlineKeyboardButton(
+                "📨 Написать пользователю",
+                url=f"https://t.me/{update.effective_user.username}"
+                if update.effective_user.username
+                else f"tg://user?id={user_id}"
+            )]
+        ])
+
+        if media_files:
+            try:
+                media_group = []
+                for i, filename in enumerate(media_files[:10]):
+                    file_path = os.path.join(MEDIA_DIR, filename)
+                    if not os.path.exists(file_path):
+                        continue
+                    try:
+                        if filename.endswith('.jpg'):
+                            # Добавляем текст только к первому фото
+                            caption = admin_text if i == 0 else ""
+                            media_group.append(InputMediaPhoto(
+                                media=open(file_path, 'rb'),
+                                caption=caption
+                            ))
+                        elif filename.endswith('.mp4'):
+                            # Добавляем текст только к первому видео
+                            caption = admin_text if i == 0 else ""
+                            media_group.append(InputMediaVideo(
+                                media=open(file_path, 'rb'),
+                                caption=caption
+                            ))
+                    except Exception as e:
+                        logger.error(f"Ошибка обработки {filename}: {e}")
+
+                if media_group:
+                    await context.bot.send_media_group(
+                        chat_id=ADMIN_CHAT_ID,
+                        media=media_group,
+                        disable_notification=True
+                    )
+                    # Отправляем кнопку отдельным сообщением
+                    await context.bot.send_message(
+                        chat_id=ADMIN_CHAT_ID,
+                        text="📨 Связь с пользователем:",
+                        reply_markup=keyboard
+                    )
+            except Exception as e:
+                logger.error(f"Ошибка отправки медиагруппы: {e}")
+                # Если не удалось отправить медиа, отправляем текстовое сообщение с кнопкой
+                await context.bot.send_message(
+                    chat_id=ADMIN_CHAT_ID,
+                    text=admin_text + "\n\n⚠ Не удалось отправить вложения",
+                    reply_markup=keyboard
+                )
+        else:
+            # Если нет медиафайлов, отправляем одно текстовое сообщение с кнопкой
+            await context.bot.send_message(
+                chat_id=ADMIN_CHAT_ID,
+                text=admin_text,
+                reply_markup=keyboard
+            )
+
         # Подтверждение пользователю
-        await update.message.reply_text(
-            TEXTS[language]['success'].format(order_number=order_number),
-            reply_markup=get_keyboard([TEXTS[language]['back']], language)
-        )
+        try:
+            with open("media/goodbye.jpg", 'rb') as photo:
+                await update.message.reply_photo(
+                    photo=photo,
+                    caption=TEXTS[language]['success'].format(order_number=order_number),
+                    reply_markup=get_keyboard([TEXTS[language]['back']], language)
+                )
+        except Exception as e:
+            logger.error(f"Ошибка отправки фото: {e}")
+            await update.message.reply_text(
+                TEXTS[language]['success'].format(order_number=order_number),
+                reply_markup=get_keyboard([TEXTS[language]['back']], language)
+            )
 
     except Exception as e:
         logger.error(f"Критическая ошибка: {e}")
@@ -450,8 +546,8 @@ async def send_to_admin(update: Update, context: CallbackContext) -> int:
             for filename in user_data[user_id].get('media', []):
                 try:
                     os.remove(os.path.join(MEDIA_DIR, filename))
-                except:
-                    pass
+                except Exception as e:
+                    logger.error(f"Ошибка удаления файла {filename}: {e}")
             del user_data[user_id]
 
     return MAIN_MENU
