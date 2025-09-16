@@ -15,3 +15,7 @@ primary_region = "mad"
   cpu_kind = "shared"
   cpus = 1
   memory_mb = 256
+
+# Копируем все файлы включая папки
+[build]
+  builtin = "dockerfile"
