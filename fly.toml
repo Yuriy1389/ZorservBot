@@ -1,11 +1,17 @@
 app = "zorservbot"
-
-[build]
-  dockerfile = "Dockerfile"
+primary_region = "mad"
 
 [env]
-  PYTHONUNBUFFERED = "1"
+  PORT = "8080"
 
-[experimental]
-  auto_rollback = true
-  allowed_public_ports = []
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory_mb = 256
