@@ -3,9 +3,12 @@ FROM python:3.11-slim
 WORKDIR /app
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install -r requirements.txt
 
+# Копируем все папки
 COPY . .
 
-CMD ["python", "bot.py"]
+# Создаем необходимые папки если их нет
+RUN mkdir -p media user_media
 
+CMD ["python", "bot.py"]
