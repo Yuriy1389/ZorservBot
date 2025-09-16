@@ -8,10 +8,3 @@ app = "zorservbot"
 
 [experimental]
   auto_rollback = true
-
-[checks]
-  [checks.alive]
-    type = "process"
-    interval = "30s"
-    timeout = "5s"
-    grace_period = "10s"
