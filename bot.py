@@ -44,7 +44,7 @@ MAKE_WEBHOOK_URL = "https://hook.eu2.make.com/2rcn5ksonlssc9dbk5tnvrcm39kgq86m"
 (MAIN_MENU, GET_NAME, GET_PHONE, GET_TECH_TYPE, GET_PROBLEM, GET_MEDIA, CONFIRM) = range(7)
 
 # Папки для хранения данных
-MEDIA_DIR = "user_media"
+MEDIA_DIR = "media"
 os.makedirs(MEDIA_DIR, exist_ok=True)
 
 # Глобальные переменные
