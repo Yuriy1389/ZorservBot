@@ -634,16 +634,21 @@ def run_bot():
     """Запуск бота в отдельном потоке"""
     try:
         init_db()
+        # Создаем Application с JobQueue
         application = Application.builder().token(TOKEN).build()
 
-        # Очистка медиафайлов каждый день в 23:00
-        cleanup_time = time(23, 0, tzinfo=MOSCOW_TZ)
-        application.job_queue.run_daily(
-            cleanup_media,
-            time=cleanup_time,
-            days=(0, 1, 2, 3, 4, 5, 6),
-            name="daily_media_cleanup"
-        )
+        # Проверяем, что job_queue доступен
+        if hasattr(application, 'job_queue') and application.job_queue:
+            # Очистка медиафайлов каждый день в 23:00
+            cleanup_time = time(23, 0, tzinfo=MOSCOW_TZ)
+            application.job_queue.run_daily(
+                cleanup_media,
+                time=cleanup_time,
+                days=(0, 1, 2, 3, 4, 5, 6),
+                name="daily_media_cleanup"
+            )
+        else:
+            logger.warning("JobQueue не доступен. Планировщик задач отключен.")
 
         # Обработчики команд
         conv_handler = ConversationHandler(
