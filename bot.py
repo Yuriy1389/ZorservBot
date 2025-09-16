@@ -7,8 +7,6 @@ from datetime import datetime
 import pytz
 from telegram import (
     Update,
-    InputMediaPhoto,
-    InputMediaVideo,
     ReplyKeyboardMarkup,
     KeyboardButton,
     InlineKeyboardButton,
@@ -55,32 +53,42 @@ user_data = {}
 # Тексты на разных языках
 TEXTS = {
     'ru': {
-        'welcome': "🔧 Добро пожаловать в сервисный центр!\nВыберите действие:",
-        'select_language': "Выберите язык:",
-        'enter_name': "Пожалуйста, введите ваше имя:",
-        'enter_phone': "Пожалуйста, введите ваш номер телефона или нажмите кнопку ниже:",
-        'select_tech': "Выберите тип техники:",
-        'describe_problem': "Опишите проблему подробно:",
-        'add_media': "📸 Пришлите фото/видео неисправности (макс. 10 файлов):\n• Фото до 20MB\n• Видео до 50MB",
-        'confirm': "📋 Ваша заявка:\n\n👤 Имя: {name}\n📞 Телефон: {phone}\n🛠 Тип техники: {tech_type}\n❗ Проблема: {problem}\n\nВсё верно?",
+        'welcome': "🔧 <b>Добро пожаловать в сервисный центр!</b>\n\nВыберите действие:",
+        'select_language': "🌐 <b>Выберите язык:</b>",
+        'enter_name': "👤 <b>Введите ваше имя:</b>",
+        'enter_phone': "📞 <b>Введите ваш номер телефона:</b>\n\nИли нажмите кнопку ниже:",
+        'select_tech': "🛠 <b>Выберите тип техники:</b>",
+        'describe_problem': "❗ <b>Опишите проблему подробно:</b>",
+        'add_media': "📸 <b>Пришлите фото/видео неисправности</b>\n\n• Фото до 20MB\n• Видео до 50MB\n• Макс. 10 файлов",
+        'confirm': "📋 <b>Ваша заявка:</b>\n\n"
+                  "👤 <b>Имя:</b> {name}\n"
+                  "📞 <b>Телефон:</b> {phone}\n"
+                  "🛠 <b>Тип техники:</b> {tech_type}\n"
+                  "❗ <b>Проблема:</b> {problem}\n\n"
+                  "<b>Всё верно?</b>",
         'confirm_buttons': ["✅ Да, всё верно", "❌ Нет, изменить данные"],
-        'success': "✅ Заявка #{order_number} отправлена!\n\nМы получили вашу заявку и уже начали работу.\nМастер свяжется с вами в ближайшее время.",
+        'success': "✅ <b>Заявка #{order_number} отправлена!</b>\n\nМы получили вашу заявку и уже начали работу.\nМастер свяжется с вами в ближайшее время.",
         'error': "❌ Произошла ошибка при обработке вашей заявки. Пожалуйста, попробуйте позже.",
         'back': "↩️ Назад",
         'skip': "⏭ Пропустить",
         'cancel': "❌ Действие отменено. Чем ещё могу помочь?"
     },
     'uz': {
-        'welcome': "🔧 Xizmat markaziga xush kelibsiz!\nHarakatni tanlang:",
-        'select_language': "Tilni tanlang:",
-        'enter_name': "Iltimos, ismingizni kiriting:",
-        'enter_phone': "Iltimos, telefon raqamingizni kiriting yoki quyidagi tugmani bosing:",
-        'select_tech': "Texnika turini tanlang:",
-        'describe_problem': "Muammoni batafsil bayon qiling:",
-        'add_media': "📸 Nosozlikning foto/video suratini yuboring (maks. 10 fayl):\n• Foto 20MB gacha\n• Video 50MB gacha",
-        'confirm': "📋 Arizangiz:\n\n👤 Ism: {name}\n📞 Telefon: {phone}\n🛠 Texnika turi: {tech_type}\n❗ Muammo: {problem}\n\nHammasi to'g'rimi?",
+        'welcome': "🔧 <b>Xizmat markaziga xush kelibsiz!</b>\n\nHarakatni tanlang:",
+        'select_language': "🌐 <b>Tilni tanlang:</b>",
+        'enter_name': "👤 <b>Ismingizni kiriting:</b>",
+        'enter_phone': "📞 <b>Telefon raqamingizni kiriting:</b>\n\nYoki quyidagi tugmani bosing:",
+        'select_tech': "🛠 <b>Texnika turini tanlang:</b>",
+        'describe_problem': "❗ <b>Muammoni batafsil bayon qiling:</b>",
+        'add_media': "📸 <b>Nosozlikning foto/video suratini yuboring</b>\n\n• Foto 20MB gacha\n• Video 50MB gacha\n• Maks. 10 fayl",
+        'confirm': "📋 <b>Arizangiz:</b>\n\n"
+                  "👤 <b>Ism:</b> {name}\n"
+                  "📞 <b>Telefon:</b> {phone}\n"
+                  "🛠 <b>Texnika turi:</b> {tech_type}\n"
+                  "❗ <b>Muammo:</b> {problem}\n\n"
+                  "<b>Hammasi to'g'rimi?</b>",
         'confirm_buttons': ["✅ Ha, hammasi to'g'ri", "❌ Yo'q, o'zgartirmoqchiman"],
-        'success': "✅ #{order_number} raqamli ariza jo'natildi!\n\nArizangiz qabul qilindi va ish boshlandi.\nTez orada usta siz bilan bog'lanadi.",
+        'success': "✅ <b>#{order_number} raqamli ariza jo'natildi!</b>\n\nArizangiz qabul qilindi va ish boshlandi.\nTez orada usta siz bilan bog'lanadi.",
         'error': "❌ Arizangizni qayta ishlashda xatolik yuz berdi. Iltimos, keyinroq urinib ko'ring.",
         'back': "↩️ Orqaga",
         'skip': "⏭ O'tkazish",
@@ -235,19 +243,30 @@ async def start(update: Update, context: CallbackContext) -> int:
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    try:
-        with open("media/welcome.jpg", "rb") as photo:
-            await update.message.reply_photo(
-                photo=photo,
-                caption=TEXTS['ru']['select_language'],
-                reply_markup=reply_markup
+    # Пытаемся отправить фото
+    if os.path.exists("media/welcome.jpg"):
+        try:
+            with open("media/welcome.jpg", "rb") as photo:
+                await update.message.reply_photo(
+                    photo=photo,
+                    caption=TEXTS['ru']['select_language'],
+                    reply_markup=reply_markup,
+                    parse_mode='HTML'
+                )
+        except Exception as e:
+            logger.error(f"Ошибка загрузки welcome.jpg: {e}")
+            await update.message.reply_text(
+                TEXTS['ru']['select_language'],
+                reply_markup=reply_markup,
+                parse_mode='HTML'
             )
-    except Exception as e:
-        logger.error(f"Ошибка загрузки welcome.jpg: {e}")
+    else:
         await update.message.reply_text(
             TEXTS['ru']['select_language'],
-            reply_markup=reply_markup
+            reply_markup=reply_markup,
+            parse_mode='HTML'
         )
+    
     return MAIN_MENU
 
 async def language_choice(update: Update, context: CallbackContext) -> int:
@@ -261,7 +280,7 @@ async def language_choice(update: Update, context: CallbackContext) -> int:
 
     await query.edit_message_text(
         text=TEXTS[language]['enter_name'],
-        reply_markup=None
+        parse_mode='HTML'
     )
     return GET_NAME
 
@@ -274,7 +293,8 @@ async def get_name(update: Update, context: CallbackContext) -> int:
 
     await update.message.reply_text(
         TEXTS[language]['enter_phone'],
-        reply_markup=contact_keyboard(language)
+        reply_markup=contact_keyboard(language),
+        parse_mode='HTML'
     )
     return GET_PHONE
 
@@ -298,7 +318,8 @@ async def get_phone(update: Update, context: CallbackContext) -> int:
 
     await update.message.reply_text(
         TEXTS[language]['select_tech'],
-        reply_markup=reply_markup
+        reply_markup=reply_markup,
+        parse_mode='HTML'
     )
     return GET_TECH_TYPE
 
@@ -311,7 +332,8 @@ async def get_tech_type(update: Update, context: CallbackContext) -> int:
 
     await update.message.reply_text(
         TEXTS[language]['describe_problem'],
-        reply_markup=get_keyboard([TEXTS[language]['back']], language)
+        reply_markup=get_keyboard([TEXTS[language]['back']], language),
+        parse_mode='HTML'
     )
     return GET_PROBLEM
 
@@ -324,7 +346,8 @@ async def get_problem(update: Update, context: CallbackContext) -> int:
 
     await update.message.reply_text(
         TEXTS[language]['add_media'],
-        reply_markup=get_keyboard([TEXTS[language]['skip'], TEXTS[language]['back']], language)
+        reply_markup=get_keyboard([TEXTS[language]['skip'], TEXTS[language]['back']], language),
+        parse_mode='HTML'
     )
     return GET_MEDIA
 
@@ -358,18 +381,21 @@ async def handle_media(update: Update, context: CallbackContext) -> int:
         if remaining > 0:
             await update.message.reply_text(
                 f"📌 Файл сохранён. Можно отправить ещё {remaining} файлов или продолжить:",
-                reply_markup=get_keyboard([TEXTS[language]['skip'], TEXTS[language]['back']], language)
+                reply_markup=get_keyboard([TEXTS[language]['skip'], TEXTS[language]['back']], language),
+                parse_mode='HTML'
             )
         else:
             await update.message.reply_text(
                 "📌 Достигнут лимит вложений (10 файлов). Продолжаем:",
-                reply_markup=get_keyboard([TEXTS[language]['skip']], language)
+                reply_markup=get_keyboard([TEXTS[language]['skip']], language),
+                parse_mode='HTML'
             )
     except Exception as e:
         logger.error(f"Ошибка сохранения файла {filename}: {e}")
         await update.message.reply_text(
             "❌ Не удалось сохранить файл. Попробуйте отправить другой файл:",
-            reply_markup=get_keyboard([TEXTS[language]['skip']], language)
+            reply_markup=get_keyboard([TEXTS[language]['skip']], language),
+            parse_mode='HTML'
         )
 
     return GET_MEDIA
@@ -388,7 +414,8 @@ async def confirm_data(update: Update, context: CallbackContext) -> int:
 
     await update.message.reply_text(
         confirm_text,
-        reply_markup=get_keyboard(TEXTS[language]['confirm_buttons'], language)
+        reply_markup=get_keyboard(TEXTS[language]['confirm_buttons'], language),
+        parse_mode='HTML'
     )
     return CONFIRM
 
@@ -399,7 +426,8 @@ async def send_to_admin(update: Update, context: CallbackContext) -> int:
         language = 'ru'
         await update.message.reply_text(
             TEXTS[language]['error'],
-            reply_markup=get_keyboard([TEXTS[language]['back']], language)
+            reply_markup=get_keyboard([TEXTS[language]['back']], language),
+            parse_mode='HTML'
         )
         return MAIN_MENU
 
@@ -408,14 +436,14 @@ async def send_to_admin(update: Update, context: CallbackContext) -> int:
         order_number = get_next_order_number()
 
         admin_text = (
-            f"🚨 Новая заявка #{order_number}\n"
-            f"👤 Имя: {user_data[user_id].get('name', 'Не указано')}\n"
-            f"📞 Телефон: {user_data[user_id].get('phone', 'Не указано')}\n"
-            f"🛠 Тип техники: {user_data[user_id].get('tech_type', 'Не указано')}\n"
-            f"❗ Проблема: {user_data[user_id].get('problem', 'Не указано')}\n"
-            f"🌐 Язык: {language}\n"
-            f"📷 Медиафайлов: {len(user_data[user_id].get('media', []))} шт\n"
-            f"🕒 Время: {datetime.now(MOSCOW_TZ).strftime('%H:%M %d.%m.%Y')}"
+            f"🚨 <b>Новая заявка #{order_number}</b>\n\n"
+            f"👤 <b>Имя:</b> {user_data[user_id].get('name', 'Не указано')}\n"
+            f"📞 <b>Телефон:</b> {user_data[user_id].get('phone', 'Не указано')}\n"
+            f"🛠 <b>Тип техники:</b> {user_data[user_id].get('tech_type', 'Не указано')}\n"
+            f"❗ <b>Проблема:</b> {user_data[user_id].get('problem', 'Не указано')}\n"
+            f"🌐 <b>Язык:</b> {language}\n"
+            f"📷 <b>Медиафайлов:</b> {len(user_data[user_id].get('media', []))} шт\n"
+            f"🕒 <b>Время:</b> {datetime.now(MOSCOW_TZ).strftime('%H:%M %d.%m.%Y')}"
         )
 
         # Сохраняем в базу данных
@@ -436,7 +464,7 @@ async def send_to_admin(update: Update, context: CallbackContext) -> int:
         conn.commit()
         conn.close()
 
-        # Подготавливаем данные для отправки в Make
+        # Отправляем данные в Make
         make_data = {
             "order_number": order_number,
             "user_id": user_id,
@@ -450,11 +478,7 @@ async def send_to_admin(update: Update, context: CallbackContext) -> int:
             "source": "telegram_bot"
         }
 
-        # Отправляем данные в Make
         asyncio.create_task(send_to_make_webhook(make_data))
-
-        # Отправка медиафайлов администратору
-        media_files = user_data[user_id].get('media', [])
 
         # Кнопка для связи с пользователем
         keyboard = InlineKeyboardMarkup([
@@ -466,79 +490,44 @@ async def send_to_admin(update: Update, context: CallbackContext) -> int:
             )]
         ])
 
-        if media_files:
-            try:
-                media_group = []
-                for i, filename in enumerate(media_files[:10]):
-                    file_path = os.path.join(MEDIA_DIR, filename)
-                    if not os.path.exists(file_path):
-                        continue
-                    try:
-                        if filename.endswith('.jpg'):
-                            # Добавляем текст только к первому фото
-                            caption = admin_text if i == 0 else ""
-                            media_group.append(InputMediaPhoto(
-                                media=open(file_path, 'rb'),
-                                caption=caption
-                            ))
-                        elif filename.endswith('.mp4'):
-                            # Добавляем текст только к первому видео
-                            caption = admin_text if i == 0 else ""
-                            media_group.append(InputMediaVideo(
-                                media=open(file_path, 'rb'),
-                                caption=caption
-                            ))
-                    except Exception as e:
-                        logger.error(f"Ошибка обработки {filename}: {e}")
-
-                if media_group:
-                    await context.bot.send_media_group(
-                        chat_id=ADMIN_CHAT_ID,
-                        media=media_group,
-                        disable_notification=True
-                    )
-                    # Отправляем кнопку отдельным сообщением
-                    await context.bot.send_message(
-                        chat_id=ADMIN_CHAT_ID,
-                        text="📨 Связь с пользователем:",
-                        reply_markup=keyboard
-                    )
-            except Exception as e:
-                logger.error(f"Ошибка отправки медиагруппы: {e}")
-                # Если не удалось отправить медиа, отправляем текстовое сообщение с кнопкой
-                await context.bot.send_message(
-                    chat_id=ADMIN_CHAT_ID,
-                    text=admin_text + "\n\n⚠ Не удалось отправить вложения",
-                    reply_markup=keyboard
-                )
-        else:
-            # Если нет медиафайлов, отправляем одно текстовое сообщение с кнопкой
-            await context.bot.send_message(
-                chat_id=ADMIN_CHAT_ID,
-                text=admin_text,
-                reply_markup=keyboard
-            )
+        # Отправляем администратору
+        await context.bot.send_message(
+            chat_id=ADMIN_CHAT_ID,
+            text=admin_text,
+            parse_mode='HTML',
+            reply_markup=keyboard
+        )
 
         # Подтверждение пользователю
-        try:
-            with open("media/goodbye.jpg", 'rb') as photo:
-                await update.message.reply_photo(
-                    photo=photo,
-                    caption=TEXTS[language]['success'].format(order_number=order_number),
-                    reply_markup=get_keyboard([TEXTS[language]['back']], language)
+        if os.path.exists("media/goodbye.jpg"):
+            try:
+                with open("media/goodbye.jpg", 'rb') as photo:
+                    await update.message.reply_photo(
+                        photo=photo,
+                        caption=TEXTS[language]['success'].format(order_number=order_number),
+                        reply_markup=get_keyboard([TEXTS[language]['back']], language),
+                        parse_mode='HTML'
+                    )
+            except Exception as e:
+                logger.error(f"Ошибка отправки фото: {e}")
+                await update.message.reply_text(
+                    TEXTS[language]['success'].format(order_number=order_number),
+                    reply_markup=get_keyboard([TEXTS[language]['back']], language),
+                    parse_mode='HTML'
                 )
-        except Exception as e:
-            logger.error(f"Ошибка отправки фото: {e}")
+        else:
             await update.message.reply_text(
                 TEXTS[language]['success'].format(order_number=order_number),
-                reply_markup=get_keyboard([TEXTS[language]['back']], language)
+                reply_markup=get_keyboard([TEXTS[language]['back']], language),
+                parse_mode='HTML'
             )
 
     except Exception as e:
         logger.error(f"Критическая ошибка: {e}")
         await update.message.reply_text(
             TEXTS[language]['error'],
-            reply_markup=get_keyboard([TEXTS[language]['back']], language)
+            reply_markup=get_keyboard([TEXTS[language]['back']], language),
+            parse_mode='HTML'
         )
     finally:
         # Очистка данных
@@ -546,8 +535,8 @@ async def send_to_admin(update: Update, context: CallbackContext) -> int:
             for filename in user_data[user_id].get('media', []):
                 try:
                     os.remove(os.path.join(MEDIA_DIR, filename))
-                except Exception as e:
-                    logger.error(f"Ошибка удаления файла {filename}: {e}")
+                except:
+                    pass
             del user_data[user_id]
 
     return MAIN_MENU
@@ -567,91 +556,47 @@ async def cancel(update: Update, context: CallbackContext) -> int:
 
     await update.message.reply_text(
         TEXTS[language]['cancel'],
-        reply_markup=get_keyboard([TEXTS[language]['back']], language)
+        reply_markup=get_keyboard([TEXTS[language]['back']], language),
+        parse_mode='HTML'
     )
     return MAIN_MENU
 
-async def run_bot():
-    """Запуск бота"""
-    try:
-        init_db()
-        application = Application.builder().token(TOKEN).build()
-
-        # Обработчики команд
-        conv_handler = ConversationHandler(
-            entry_points=[CommandHandler('start', start)],
-            states={
-                MAIN_MENU: [CallbackQueryHandler(language_choice, pattern='^lang_')],
-                GET_NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_name)],
-                GET_PHONE: [MessageHandler(filters.TEXT | filters.CONTACT, get_phone)],
-                GET_TECH_TYPE: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_tech_type)],
-                GET_PROBLEM: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_problem)],
-                GET_MEDIA: [
-                    MessageHandler(filters.PHOTO | filters.VIDEO, handle_media),
-                    MessageHandler(filters.TEXT & ~filters.COMMAND, confirm_data),
-                ],
-                CONFIRM: [
-                    MessageHandler(filters.Regex('^(✅ Да, всё верно|✅ Ha, hammasi to\'g\'ri)$'), send_to_admin),
-                    MessageHandler(filters.Regex('^(❌ Нет, изменить данные|❌ Yo\'q, o\'zgartirmoqchiman)$'), start),
-                ],
-            },
-            fallbacks=[CommandHandler('cancel', cancel)],
-            allow_reentry=True
-        )
-
-        application.add_handler(conv_handler)
-
-        logger.info("Бот запускается...")
-        await application.initialize()
-        await application.start()
-        await application.updater.start_polling()
-        
-        logger.info("Бот успешно запущен!")
-        
-        # Бесконечный цикл чтобы бот не завершался
-        while True:
-            await asyncio.sleep(3600)  # Спим 1 час
-
-    except Exception as e:
-        logger.error(f"Ошибка запуска бота: {e}")
-        raise
-
 def main():
     """Основная функция запуска"""
-    # Создаем и запускаем Flask сервер для health check
-    app = Flask(__name__)
+    logger.info("Запуск приложения...")
+    
+    init_db()
+    application = Application.builder().token(TOKEN).build()
 
-    @app.route('/')
-    def health_check():
-        return "✅ Bot is alive and running!"
+    # Обработчики команд
+    conv_handler = ConversationHandler(
+        entry_points=[CommandHandler('start', start)],
+        states={
+            MAIN_MENU: [CallbackQueryHandler(language_choice, pattern='^lang_')],
+            GET_NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_name)],
+            GET_PHONE: [MessageHandler(filters.TEXT | filters.CONTACT, get_phone)],
+            GET_TECH_TYPE: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_tech_type)],
+            GET_PROBLEM: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_problem)],
+            GET_MEDIA: [
+                MessageHandler(filters.PHOTO | filters.VIDEO, handle_media),
+                MessageHandler(filters.TEXT & ~filters.COMMAND, confirm_data),
+            ],
+            CONFIRM: [
+                MessageHandler(filters.Regex('^(✅ Да, всё верно|✅ Ha, hammasi to\'g\'ri)$'), send_to_admin),
+                MessageHandler(filters.Regex('^(❌ Нет, изменить данные|❌ Yo\'q, o\'zgartirmoqchiman)$'), start),
+            ],
+        },
+        fallbacks=[CommandHandler('cancel', cancel)],
+        allow_reentry=True
+    )
 
-    @app.route('/health')
-    def health():
-        return "OK"
+    application.add_handler(conv_handler)
 
-    # Запускаем бота в asyncio event loop
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    
-    # Запускаем бота в фоновой задаче
-    bot_task = loop.create_task(run_bot())
-    
-    # Запускаем Flask в отдельном потоке
-    from threading import Thread
-    flask_thread = Thread(target=lambda: app.run(host='0.0.0.0', port=PORT, debug=False, use_reloader=False))
-    flask_thread.daemon = True
-    flask_thread.start()
-    
-    logger.info(f"Flask сервер запущен на порту {PORT}")
-    
-    try:
-        # Запускаем event loop
-        loop.run_forever()
-    except KeyboardInterrupt:
-        logger.info("Остановка бота...")
-    finally:
-        bot_task.cancel()
-        loop.close()
+    logger.info("Бот запускается...")
+    application.run_polling(
+        drop_pending_updates=True,
+        allowed_updates=Update.ALL_TYPES
+    )
 
 if __name__ == '__main__':
     main()
