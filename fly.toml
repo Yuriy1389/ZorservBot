@@ -1,5 +1,4 @@
-app = "zorservbot
-"
+app = "zorservbot"
 
 [build]
   dockerfile = "Dockerfile"
