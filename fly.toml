@@ -8,11 +8,4 @@ app = "zorservbot"
 
 [experimental]
   auto_rollback = true
- [checks]
-  [checks.alive]
-    type = "tcp"
-    interval = "30s"
-    timeout = "10s"
-    grace_period = "30s"
-    port = 22
-
+  allowed_public_ports = []
