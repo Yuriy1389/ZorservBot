@@ -5,3 +5,6 @@ app = "zorservbot"
 
 [env]
   PYTHONUNBUFFERED = "1"
+
+[experimental]
+  auto_rollback = true
