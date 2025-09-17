@@ -1,4 +1,4 @@
-app = "ZorservBot"
+app = "zorservBot"
 primary_region = "iad"
 
 [env]
