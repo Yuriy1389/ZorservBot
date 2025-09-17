@@ -628,8 +628,9 @@ async def main() -> None:
     logger.info(f"Webhook установлен: {webhook_url}")
 
 if __name__ == '__main__':
-    # Инициализируем бота
-    main()
+    # Запускаем асинхронную инициализацию
+    asyncio.run(main())
     
-    # Запускаем Flask сервер
-    app.run(host='0.0.0.0', port=PORT, debug=False)
+    # Запускаем Flask сервер в production режиме
+    from waitress import serve
+    serve(app, host='0.0.0.0', port=PORT)
