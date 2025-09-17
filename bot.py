@@ -582,7 +582,7 @@ def webhook():
         logger.error(f"Ошибка обработки webhook: {e}")
         return "Error", 500
 
-def main() -> None:
+async def main() -> None:
     """Основная функция запуска бота"""
     global application
     
@@ -592,7 +592,7 @@ def main() -> None:
     # Создание приложения
     application = Application.builder().token(TOKEN).build()
 
-    # Настройка ConversationHandler
+    # Настройка ConversationHandler с правильными параметрами
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler('start', start)],
         states={
@@ -614,6 +614,7 @@ def main() -> None:
             ]
         },
         fallbacks=[CommandHandler('cancel', cancel)],
+        per_message=False,  # Явно указываем параметр
         allow_reentry=True
     )
 
@@ -621,9 +622,9 @@ def main() -> None:
     application.add_handler(conv_handler)
     application.add_error_handler(error_handler)
 
-    # Устанавливаем webhook
+    # Устанавливаем webhook (с await!)
     webhook_url = f"https://{os.getenv('FLY_APP_NAME')}.fly.dev/webhook"
-    application.bot.set_webhook(webhook_url)
+    await application.bot.set_webhook(webhook_url)
     logger.info(f"Webhook установлен: {webhook_url}")
 
 if __name__ == '__main__':
