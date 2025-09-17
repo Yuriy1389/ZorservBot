@@ -497,4 +497,4 @@ async def send_to_admin(update: Update, context: CallbackContext) -> int:
             "problem": user_data[user_id].get('problem', 'Не указано'),
             "language": language,
             "media_count": len(user_data[user_id].get('media', [])),
-            "source": "telegram
+            "source": "telegram"
