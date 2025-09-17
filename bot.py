@@ -592,7 +592,7 @@ async def main() -> None:
     # Создание приложения
     application = Application.builder().token(TOKEN).build()
 
-    # Настройка ConversationHandler с правильными параметрами
+    # Настройка ConversationHandler
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler('start', start)],
         states={
@@ -622,32 +622,58 @@ async def main() -> None:
     application.add_handler(conv_handler)
     application.add_error_handler(error_handler)
 
-    # Устанавливаем webhook с явным указанием имени
+    # Устанавливаем webhook
     webhook_url = "https://zorservbot.fly.dev/webhook"
     logger.info(f"Устанавливаем webhook: {webhook_url}")
     
     try:
+        # Очищаем предыдущий webhook и устанавливаем новый
+        await application.bot.delete_webhook()
+        await asyncio.sleep(1)  # небольшая пауза
         await application.bot.set_webhook(webhook_url)
         logger.info("Webhook успешно установлен!")
+        return True
     except Exception as e:
         logger.error(f"Ошибка установки webhook: {e}")
-        # Продолжаем работу даже если webhook не установился
+        return False
 
-    return application
+@app.route('/webhook', methods=['POST'])
+def webhook():
+    """Обработчик webhook от Telegram"""
+    if application is None:
+        return "Application not initialized", 500
+        
+    try:
+        # Получаем обновление от Telegram
+        update_data = request.get_json()
+        update = Update.de_json(update_data, application.bot)
+        
+        # Обрабатываем обновление асинхронно
+        asyncio.run(application.process_update(update))
+        
+        return "OK", 200
+    except Exception as e:
+        logger.error(f"Ошибка обработки webhook: {e}")
+        return "Error", 500
 
+@app.route('/')
+def index():
+    return "Bot is running and ready to receive webhooks!"
 
 if __name__ == '__main__':
-    # Запускаем асинхронную инициализацию
     import asyncio
     
-    async def run_bot():
-        app_instance = await main()
-        return app_instance
-        
-    # Запускаем бота
+    # Инициализируем бота
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-    application = loop.run_until_complete(run_bot())
+    webhook_success = loop.run_until_complete(main())
     
-    # Запускаем Flask сервер
-    app.run(host='0.0.0.0', port=PORT, debug=False)
+    if webhook_success:
+        logger.info("Запускаем Flask сервер для webhook")
+        # Используем production сервер
+        from waitress import serve
+        serve(app, host='0.0.0.0', port=PORT)
+    else:
+        logger.error("Не удалось установить webhook, запускаем polling")
+        # Fallback на polling
+        loop.run_until_complete(application.run_polling())
