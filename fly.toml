@@ -17,3 +17,4 @@ primary_region = "iad"
   timeout = "2s"
   method = "get"
   path = "/"
+ 
