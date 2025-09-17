@@ -53,46 +53,46 @@ user_data = {}
 # Тексты на разных языках
 TEXTS = {
     'ru': {
-        'welcome': "👋 <b>Здравствуйте, меня зовут Zorservbot!</b>\n\nЯ помогу оформить Вам заказ!\n\n🌐 <b>Выберите язык:</b>",
-        'enter_name': "👤 <b>Введите ваше имя:</b>",
-        'enter_phone': "📞 <b>Введите ваш номер телефона:</b>\n\nИли нажмите кнопку ниже:",
-        'select_tech': "🛠 <b>Выберите тип техники:</b>",
-        'describe_problem': "❗ <b>Опишите проблему подробно:</b>",
-        'add_media': "📸 <b>Пришлите фото/видео неисправности</b>\n\n• Фото до 20MB\n• Видео до 50MB\n• Макс. 10 файлов",
-        'confirm': "📋 <b>Ваша заявка:</b>\n\n"
-                  "👤 <b>Имя:</b> {name}\n"
-                  "📞 <b>Телефон:</b> {phone}\n"
-                  "🛠 <b>Тип техники:</b> {tech_type}\n"
-                  "❗ <b>Проблема:</b> {problem}\n\n"
-                  "<b>Всё верно?</b>",
+        'welcome': "👋 <b>Здравствуйте, меня зовут Zorservbot!</b>\nЯ помогу оформить Вам заказ!\n\n<b>Salom, mening ismim Zorservbot!</b>\nMen sizga buyurtma berishga yordam beraman!\n\n🌐 <b>Выберите язык / Tilni tanlang</b>",
+        'enter_name': "👤 <b>Введите ваше имя / Ismingizni kiriting:</b>",
+        'enter_phone': "📞 <b>Введите ваш номер телефона / Telefon raqamingizni kiriting:</b>\n\nИли нажмите кнопку ниже / Yoki quyidagi tugmani bosing:",
+        'select_tech': "🛠 <b>Выберите тип техники / Texnika turini tanlang:</b>",
+        'describe_problem': "❗ <b>Опишите проблему подробно / Muammoni batafsil bayon qiling:</b>",
+        'add_media': "📸 <b>Пришлите фото/видео неисправности / Nosozlikning foto/video suratini yuboring</b>\n\n• Фото до 20MB / Foto 20MB gacha\n• Видео до 50MB / Video 50MB gacha\n• Макс. 10 файлов / Maks. 10 fayl",
+        'confirm': "📋 <b>Ваша заявка / Arizangiz:</b>\n\n"
+                  "👤 <b>Имя / Ism:</b> {name}\n"
+                  "📞 <b>Телефон / Telefon:</b> {phone}\n"
+                  "🛠 <b>Тип техники / Texnika turi:</b> {tech_type}\n"
+                  "❗ <b>Проблема / Muammo:</b> {problem}\n\n"
+                  "<b>Всё верно? / Hammasi to'g'rimi?</b>",
         'confirm_buttons': ["✅ Да, всё верно", "❌ Нет, изменить данные"],
-        'success': "✅ <b>Заявка #{order_number} отправлена!</b>\n\nМы получили вашу заявку и уже начали работу.\nМастер свяжется с вами в ближайшее время.",
-        'error': "❌ Произошла ошибка при обработке вашей заявки. Пожалуйста, попробуйте позже.",
-        'back': "↩️ Назад",
-        'skip': "⏭ Пропустить",
-        'cancel': "❌ Действие отменено. Чем ещё могу помочь?",
-        'start_again': "🔄 Начать заново"
+        'success': "✅ <b>Заявка #{order_number} отправлена! / #{order_number} raqamli ariza jo'natildi!</b>\n\nМы получили вашу заявку и уже начали работу. / Arizangiz qabul qilindi va ish boshlandi.\nМастер свяжется с вами в ближайшее время. / Tez orada usta siz bilan bog'lanadi.",
+        'error': "❌ Произошла ошибка при обработке вашей заявки. Пожалуйста, попробуйте позже. / Arizangizni qayta ishlashda xatolik yuz berdi. Iltimos, keyinroq urinib ko'ring.",
+        'back': "↩️ Назад / Orqaga",
+        'skip': "⏭ Пропустить / O'tkazish",
+        'cancel': "❌ Действие отменено. Чем ещё могу помочь? / Harakat bekor qilindi. Yana qanday yordam bera olaman?",
+        'start_again': "🔄 Начать заново / Qayta boshlash"
     },
     'uz': {
-        'welcome': "👋 <b>Salom, mening ismim Zorservbot!</b>\n\nMen sizga buyurtma berishga yordam beraman!\n\n🌐 <b>Tilni tanlang:</b>",
-        'enter_name': "👤 <b>Ismingizni kiriting:</b>",
-        'enter_phone': "📞 <b>Telefon raqamingizni kiriting:</b>\n\nYoki quyidagi tugmani bosing:",
-        'select_tech': "🛠 <b>Texnika turini tanlang:</b>",
-        'describe_problem': "❗ <b>Muammoni batafsil bayon qiling:</b>",
-        'add_media': "📸 <b>Nosozlikning foto/video suratini yuboring</b>\n\n• Foto 20MB gacha\n• Video 50MB gacha\n• Maks. 10 fayl",
-        'confirm': "📋 <b>Arizangiz:</b>\n\n"
-                  "👤 <b>Ism:</b> {name}\n"
-                  "📞 <b>Telefon:</b> {phone}\n"
-                  "🛠 <b>Texnika turi:</b> {tech_type}\n"
-                  "❗ <b>Muammo:</b> {problem}\n\n"
-                  "<b>Hammasi to'g'rimi?</b>",
+        'welcome': "👋 <b>Здравствуйте, меня зовут Zorservbot!</b>\nЯ помогу оформить Вам заказ!\n\n<b>Salom, mening ismim Zorservbot!</b>\nMen sizga buyurtma berishga yordam beraman!\n\n🌐 <b>Выберите язык / Tilni tanlang</b>",
+        'enter_name': "👤 <b>Введите ваше имя / Ismingizni kiriting:</b>",
+        'enter_phone': "📞 <b>Введите ваш номер телефона / Telefon raqamingizni kiriting:</b>\n\nИли нажмите кнопку ниже / Yoki quyidagi tugmani bosing:",
+        'select_tech': "🛠 <b>Выберите тип техники / Texnika turini tanlang:</b>",
+        'describe_problem': "❗ <b>Опишите проблему подробно / Muammoni batafsil bayon qiling:</b>",
+        'add_media': "📸 <b>Пришлите фото/видео неисправности / Nosozlikning foto/video suratini yuboring</b>\n\n• Фото до 20MB / Foto 20MB gacha\n• Видео до 50MB / Video 50MB gacha\n• Макс. 10 файлов / Maks. 10 fayl",
+        'confirm': "📋 <b>Ваша заявка / Arizangiz:</b>\n\n"
+                  "👤 <b>Имя / Ism:</b> {name}\n"
+                  "📞 <b>Телефон / Telefon:</b> {phone}\n"
+                  "🛠 <b>Тип техники / Texnika turi:</b> {tech_type}\n"
+                  "❗ <b>Проблема / Muammo:</b> {problem}\n\n"
+                  "<b>Всё верно? / Hammasi to'g'rimi?</b>",
         'confirm_buttons': ["✅ Ha, hammasi to'g'ri", "❌ Yo'q, o'zgartirmoqchiman"],
-        'success': "✅ <b>#{order_number} raqamli ariza jo'natildi!</b>\n\nArizangiz qabul qilindi va ish boshlandi.\nTez orada usta siz bilan bog'lanadi.",
-        'error': "❌ Arizangizni qayta ishlashda xatolik yuz berdi. Iltimos, keyinroq urinib ko'ring.",
-        'back': "↩️ Orqaga",
-        'skip': "⏭ O'tkazish",
-        'cancel': "❌ Harakat bekor qilindi. Yana qanday yordam bera olaman?",
-        'start_again': "🔄 Qayta boshlash"
+        'success': "✅ <b>Заявка #{order_number} отправлена! / #{order_number} raqamli ariza jo'natildi!</b>\n\nМы получили вашу заявку и уже начали работу. / Arizangiz qabul qilindi va ish boshlandi.\nМастер свяжется с вами в ближайшее время. / Tez orada usta siz bilan bog'lanadi.",
+        'error': "❌ Произошла ошибка при обработке вашей заявки. Пожалуйста, попробуйте позже. / Arizangizni qayta ishlashda xatolik yuz berdi. Iltimos, keyinroq urinib ko'ring.",
+        'back': "↩️ Назад / Orqaga",
+        'skip': "⏭ Пропустить / O'tkazish",
+        'cancel': "❌ Действие отменено. Чем ещё могу помочь? / Harakat bekor qilindi. Yana qanday yordam bera olaman?",
+        'start_again': "🔄 Начать заново / Qayta boshlash"
     }
 }
 
@@ -229,9 +229,15 @@ def get_keyboard(buttons, language='ru'):
 
 def contact_keyboard(language='ru'):
     """Клавиатура для отправки контакта"""
-    text = TEXTS[language]['back']
+    if language == 'ru':
+        text = "↩️ Назад / Orqaga"
+        button_text = "📱 Отправить мой номер / Mening raqamimni yuborish"
+    else:
+        text = "↩️ Orqaga / Назад"
+        button_text = "📱 Mening raqamimni yuborish / Отправить мой номер"
+    
     return ReplyKeyboardMarkup([
-        [KeyboardButton("📱 " + ("Отправить мой номер" if language == 'ru' else "Mening raqamimni yuborish"), request_contact=True)],
+        [KeyboardButton(button_text, request_contact=True)],
         [KeyboardButton(text)]
     ], resize_keyboard=True)
 
@@ -244,8 +250,8 @@ def start_keyboard(language='ru'):
 async def start(update: Update, context: CallbackContext) -> int:
     """Начало диалога, выбор языка"""
     keyboard = [
-        [InlineKeyboardButton("Русский", callback_data='lang_ru')],
-        [InlineKeyboardButton("Oʻzbekcha", callback_data='lang_uz')]
+        [InlineKeyboardButton("Русский язык", callback_data='lang_ru')],
+        [InlineKeyboardButton("Узбекский язык", callback_data='lang_uz')]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
@@ -284,10 +290,20 @@ async def language_choice(update: Update, context: CallbackContext) -> int:
     language = query.data.split('_')[1]
     user_data[user_id] = {'language': language, 'step': 'name'}
 
+    # Обновляем сообщение с убранными кнопками
+    welcome_text = TEXTS[language]['welcome'].split('🌐')[0]  # Берем только приветствие без выбора языка
     await query.edit_message_text(
+        text=welcome_text,
+        parse_mode='HTML'
+    )
+    
+    # Отправляем запрос имени
+    await context.bot.send_message(
+        chat_id=query.message.chat_id,
         text=TEXTS[language]['enter_name'],
         parse_mode='HTML'
     )
+    
     return GET_NAME
 
 async def get_name(update: Update, context: CallbackContext) -> int:
@@ -481,128 +497,4 @@ async def send_to_admin(update: Update, context: CallbackContext) -> int:
             "problem": user_data[user_id].get('problem', 'Не указано'),
             "language": language,
             "media_count": len(user_data[user_id].get('media', [])),
-            "source": "telegram_bot"
-        }
-
-        asyncio.create_task(send_to_make_webhook(make_data))
-
-        # Кнопка для связи с пользователем
-        keyboard = InlineKeyboardMarkup([
-            [InlineKeyboardButton(
-                "📨 Написать пользователю",
-                url=f"https://t.me/{update.effective_user.username}"
-                if update.effective_user.username
-                else f"tg://user?id={user_id}"
-            )]
-        ])
-
-        # Отправляем администратору
-        await context.bot.send_message(
-            chat_id=ADMIN_CHAT_ID,
-            text=admin_text,
-            parse_mode='HTML',
-            reply_markup=keyboard
-        )
-
-        # Подтверждение пользователю с кнопкой Старт
-        if os.path.exists("media/goodbye.jpg"):
-            try:
-                with open("media/goodbye.jpg", 'rb') as photo:
-                    await update.message.reply_photo(
-                        photo=photo,
-                        caption=TEXTS[language]['success'].format(order_number=order_number),
-                        reply_markup=start_keyboard(language),
-                        parse_mode='HTML'
-                    )
-            except Exception as e:
-                logger.error(f"Ошибка отправки фото: {e}")
-                await update.message.reply_text(
-                    TEXTS[language]['success'].format(order_number=order_number),
-                    reply_markup=start_keyboard(language),
-                    parse_mode='HTML'
-                )
-        else:
-            await update.message.reply_text(
-                TEXTS[language]['success'].format(order_number=order_number),
-                reply_markup=start_keyboard(language),
-                parse_mode='HTML'
-            )
-
-    except Exception as e:
-        logger.error(f"Критическая ошибка: {e}")
-        await update.message.reply_text(
-            TEXTS[language]['error'],
-            reply_markup=start_keyboard(language),
-            parse_mode='HTML'
-        )
-    finally:
-        # Очистка данных
-        if user_id in user_data:
-            for filename in user_data[user_id].get('media', []):
-                try:
-                    os.remove(os.path.join(MEDIA_DIR, filename))
-                except:
-                    pass
-            del user_data[user_id]
-
-    return ConversationHandler.END
-
-async def cancel(update: Update, context: CallbackContext) -> int:
-    """Отмена текущего действия"""
-    user_id = update.effective_user.id
-    language = user_data.get(user_id, {}).get('language', 'ru')
-
-    if user_id in user_data:
-        for filename in user_data[user_id].get('media', []):
-            try:
-                os.remove(os.path.join(MEDIA_DIR, filename))
-            except:
-                pass
-        del user_data[user_id]
-
-    await update.message.reply_text(
-        TEXTS[language]['cancel'],
-        reply_markup=start_keyboard(language),
-        parse_mode='HTML'
-    )
-    return ConversationHandler.END
-
-def main():
-    """Основная функция запуска"""
-    logger.info("Запуск приложения...")
-    
-    init_db()
-    application = Application.builder().token(TOKEN).build()
-
-    # Обработчики команд
-    conv_handler = ConversationHandler(
-        entry_points=[CommandHandler('start', start)],
-        states={
-            MAIN_MENU: [CallbackQueryHandler(language_choice, pattern='^lang_')],
-            GET_NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_name)],
-            GET_PHONE: [MessageHandler(filters.TEXT | filters.CONTACT, get_phone)],
-            GET_TECH_TYPE: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_tech_type)],
-            GET_PROBLEM: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_problem)],
-            GET_MEDIA: [
-                MessageHandler(filters.PHOTO | filters.VIDEO, handle_media),
-                MessageHandler(filters.TEXT & ~filters.COMMAND, confirm_data),
-            ],
-            CONFIRM: [
-                MessageHandler(filters.Regex('^(✅ Да, всё верно|✅ Ha, hammasi to\'g\'ri)$'), send_to_admin),
-                MessageHandler(filters.Regex('^(❌ Нет, изменить данные|❌ Yo\'q, o\'zgartirmoqchiman)$'), start),
-            ],
-        },
-        fallbacks=[CommandHandler('cancel', cancel)],
-        allow_reentry=True
-    )
-
-    application.add_handler(conv_handler)
-
-    logger.info("Бот запускается...")
-    application.run_polling(
-        drop_pending_updates=True,
-        allowed_updates=Update.ALL_TYPES
-    )
-
-if __name__ == '__main__':
-    main()
+            "source": "telegram
