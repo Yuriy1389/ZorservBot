@@ -469,32 +469,34 @@ async def send_to_admin(update: Update, context: CallbackContext) -> int:
         )
 
         # Сохраняем в базу данных
-        conn = sqlite3.connect('orders.db')
-        c = conn.cursor()
-        c.execute('''INSERT INTO orders
-                    (order_number, user_id, username, name, phone, tech_type, problem, media_files, language)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-                (order_number,
-                user_id,
-                update.effective_user.username,
-                user_data[user_id].get('name'),
-                user_data[user_id].get('phone'),
-                user_data[user_id].get('tech_type'),
-                user_data[user_id].get('problem'),
-                ",".join(user_data[user_id].get('media', [])),
-                language))
-        conn.commit()
-        conn.close()
+conn = sqlite3.connect('orders.db')
+c = conn.cursor()
+c.execute('''INSERT INTO orders
+            (order_number, user_id, username, name, phone, tech_type, problem, media_files, language)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+        (order_number,
+        user_id,
+        update.effective_user.username,
+        user_data[user_id].get('name'),
+        user_data[user_id].get('phone'),
+        user_data[user_id].get('tech_type'),
+        user_data[user_id].get('problem'),
+        ",".join(user_data[user_id].get('media', [])),
+        language))
+conn.commit()
+conn.close()
 
-        # Отправляем данные в Make
-        make_data = {
-            "order_number": order_number,
-            "user_id": user_id,
-            "username": update.effective_user.username or "Не указано",
-            "name": user_data[user_id].get('name', 'Не указано'),
-            "phone": user_data[user_id].get('phone', 'Не указано'),
-            "tech_type": user_data[user_id].get('tech_type', 'Не указано'),
-            "problem": user_data[user_id].get('problem', 'Не указано'),
-            "language": language,
-            "media_count": len(user_data[user_id].get('media', [])),
-            "source": "telegram"
+# Отправляем данные в Make
+make_data = {
+    "order_number": order_number,
+    "user_id": user_id,
+    "username": update.effective_user.username or "Не указано",
+    "name": user_data[user_id].get('name', 'Не указано'),
+    "phone": user_data[user_id].get('phone', 'Не указано'),
+    "tech_type": user_data[user_id].get('tech_type', 'Не указано'),
+    "problem": user_data[user_id].get('problem', 'Не указано'),
+    "language": language,
+    "media_count": len(user_data[user_id].get('media', [])),
+    "source": "telegram"
+}  
+
