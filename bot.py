@@ -614,7 +614,7 @@ async def main() -> None:
             ]
         },
         fallbacks=[CommandHandler('cancel', cancel)],
-        per_message=False,  # Явно указываем параметр
+        per_message=False,
         allow_reentry=True
     )
 
@@ -622,10 +622,18 @@ async def main() -> None:
     application.add_handler(conv_handler)
     application.add_error_handler(error_handler)
 
-    # Устанавливаем webhook (с await!)
-   app_name = os.getenv('FLY_APP_NAME', 'zorservbot')  # значение по умолчанию
-webhook_url = f"https://{app_name}.fly.dev/webhook"
-logger.info(f"Пытаемся установить webhook: {webhook_url}")
+    # Устанавливаем webhook с явным указанием имени
+    webhook_url = "https://zorservbot.fly.dev/webhook"
+    logger.info(f"Устанавливаем webhook: {webhook_url}")
+    
+    try:
+        await application.bot.set_webhook(webhook_url)
+        logger.info("Webhook успешно установлен!")
+    except Exception as e:
+        logger.error(f"Ошибка установки webhook: {e}")
+        # Продолжаем работу даже если webhook не установился
+
+    return application
 
 
 if __name__ == '__main__':
