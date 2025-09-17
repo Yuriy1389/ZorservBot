@@ -21,7 +21,7 @@ from telegram.ext import (
     filters,
     CallbackQueryHandler
 )
-from flask import Flask
+from flask import Flask, request
 
 # Настройка логгирования
 logging.basicConfig(
@@ -553,8 +553,39 @@ async def error_handler(update: Update, context: CallbackContext) -> None:
     """Обработка ошибок"""
     logger.error(f"Ошибка при обработке обновления: {context.error}")
 
+# Создаем Flask приложение
+app = Flask(__name__)
+
+# Глобальная переменная для хранения приложения Telegram
+application = None
+
+@app.route('/')
+def index():
+    return "Bot is running and ready to receive webhooks!"
+
+@app.route('/webhook', methods=['POST'])
+def webhook():
+    """Обработчик webhook от Telegram"""
+    if application is None:
+        return "Application not initialized", 500
+        
+    try:
+        # Получаем обновление от Telegram
+        update_data = request.get_json()
+        update = Update.de_json(update_data, application.bot)
+        
+        # Обрабатываем обновление асинхронно
+        asyncio.run(application.process_update(update))
+        
+        return "OK", 200
+    except Exception as e:
+        logger.error(f"Ошибка обработки webhook: {e}")
+        return "Error", 500
+
 def main() -> None:
     """Основная функция запуска бота"""
+    global application
+    
     # Инициализация базы данных
     init_db()
     
@@ -590,9 +621,14 @@ def main() -> None:
     application.add_handler(conv_handler)
     application.add_error_handler(error_handler)
 
-    # Запуск бота
-    logger.info("Бот запущен...")
-    application.run_polling()
+    # Устанавливаем webhook
+    webhook_url = f"https://{os.getenv('FLY_APP_NAME')}.fly.dev/webhook"
+    application.bot.set_webhook(webhook_url)
+    logger.info(f"Webhook установлен: {webhook_url}")
 
 if __name__ == '__main__':
+    # Инициализируем бота
     main()
+    
+    # Запускаем Flask сервер
+    app.run(host='0.0.0.0', port=PORT, debug=False)
