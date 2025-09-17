@@ -498,9 +498,9 @@ async def send_to_admin(update: Update, context: CallbackContext) -> int:
             "language": language,
             "media_count": len(user_data[user_id].get('media', [])),
             "source": "telegram"
-        }  # ← ЗАКРЫВАЮЩАЯ СКОБКА ДОБАВЛЕНА
+        }
 
-        # Отправляем данные в Make (добавьте этот вызов)
+        # Отправляем данные в Make
         await send_to_make_webhook(make_data)
 
         # Отправляем уведомление администратору
@@ -533,5 +533,66 @@ async def send_to_admin(update: Update, context: CallbackContext) -> int:
             parse_mode='HTML'
         )
         return MAIN_MENU
- 
 
+async def cancel(update: Update, context: CallbackContext) -> int:
+    """Отмена диалога"""
+    user_id = update.effective_user.id
+    language = user_data.get(user_id, {}).get('language', 'ru')
+    
+    if user_id in user_data:
+        del user_data[user_id]
+    
+    await update.message.reply_text(
+        TEXTS[language]['cancel'],
+        reply_markup=start_keyboard(language),
+        parse_mode='HTML'
+    )
+    return ConversationHandler.END
+
+async def error_handler(update: Update, context: CallbackContext) -> None:
+    """Обработка ошибок"""
+    logger.error(f"Ошибка при обработке обновления: {context.error}")
+
+def main() -> None:
+    """Основная функция запуска бота"""
+    # Инициализация базы данных
+    init_db()
+    
+    # Создание приложения
+    application = Application.builder().token(TOKEN).build()
+
+    # Настройка ConversationHandler
+    conv_handler = ConversationHandler(
+        entry_points=[CommandHandler('start', start)],
+        states={
+            MAIN_MENU: [CallbackQueryHandler(language_choice, pattern='^lang_')],
+            GET_NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_name)],
+            GET_PHONE: [
+                MessageHandler(filters.CONTACT, get_phone),
+                MessageHandler(filters.TEXT & ~filters.COMMAND, get_phone)
+            ],
+            GET_TECH_TYPE: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_tech_type)],
+            GET_PROBLEM: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_problem)],
+            GET_MEDIA: [
+                MessageHandler(filters.PHOTO | filters.VIDEO, handle_media),
+                MessageHandler(filters.TEXT & ~filters.COMMAND, handle_media)
+            ],
+            CONFIRM: [
+                MessageHandler(filters.Regex('^(✅ Да, всё верно|✅ Ha, hammasi to\'g\'ri)$'), send_to_admin),
+                MessageHandler(filters.Regex('^(❌ Нет, изменить данные|❌ Yo\'q, o\'zgartirmoqchiman)$'), start)
+            ]
+        },
+        fallbacks=[CommandHandler('cancel', cancel)],
+        allow_reentry=True
+    )
+
+    # Добавление обработчиков
+    application.add_handler(conv_handler)
+    application.add_error_handler(error_handler)
+
+    # Запуск бота
+    logger.info("Бот запущен...")
+    application.run_polling()
+
+if __name__ == '__main__':
+    main()
