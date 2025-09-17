@@ -623,14 +623,23 @@ async def main() -> None:
     application.add_error_handler(error_handler)
 
     # Устанавливаем webhook (с await!)
-    webhook_url = f"https://{os.getenv('FLY_APP_NAME')}.fly.dev/webhook"
-    await application.bot.set_webhook(webhook_url)
-    logger.info(f"Webhook установлен: {webhook_url}")
+   app_name = os.getenv('FLY_APP_NAME', 'zorservbot')  # значение по умолчанию
+webhook_url = f"https://{app_name}.fly.dev/webhook"
+logger.info(f"Пытаемся установить webhook: {webhook_url}")
+
 
 if __name__ == '__main__':
     # Запускаем асинхронную инициализацию
-    asyncio.run(main())
+    import asyncio
     
-    # Запускаем Flask сервер в production режиме
-    from waitress import serve
-    serve(app, host='0.0.0.0', port=PORT)
+    async def run_bot():
+        app_instance = await main()
+        return app_instance
+        
+    # Запускаем бота
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    application = loop.run_until_complete(run_bot())
+    
+    # Запускаем Flask сервер
+    app.run(host='0.0.0.0', port=PORT, debug=False)
