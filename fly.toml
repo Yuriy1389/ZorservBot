@@ -16,3 +16,6 @@ primary_region = "iad"
   timeout = "2s"
   method = "get"
   path = "/"
+[env]
+  BOT_TOKEN = "your_bot_token"
+  FLY_APP_NAME = "zorservbot"
