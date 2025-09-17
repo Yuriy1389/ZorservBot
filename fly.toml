@@ -1,18 +1,6 @@
-app = "zorservbot"  # Замените на реальное имя
-primary_region = "iad"
-
-[env]
-  BOT_TOKEN = "your_bot_token_here"
-
 [http_service]
   internal_port = 8080
   force_https = true
   auto_stop_machines = false
   auto_start_machines = true
   min_machines_running = 0
-
-[[http_service.checks]]
-  interval = "10s"
-  timeout = "2s"
-  method = "get"
-  path = "/"
