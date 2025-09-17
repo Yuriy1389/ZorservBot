@@ -1,8 +1,9 @@
-app = "zorservbot"  # должно совпадать с именем вашего приложения на Fly.io
+app = "zorservbot"
 primary_region = "iad"
 
 [env]
   BOT_TOKEN = "your_bot_token_here"
+  FLY_APP_NAME = "zorservbot"
 
 [http_service]
   internal_port = 8080
@@ -16,6 +17,3 @@ primary_region = "iad"
   timeout = "2s"
   method = "get"
   path = "/"
-[env]
-  BOT_TOKEN = "your_bot_token"
-  FLY_APP_NAME = "zorservbot"
