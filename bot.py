@@ -256,29 +256,11 @@ async def start(update: Update, context: CallbackContext) -> int:
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    # Отправляем приветствие с выбором языка
-    if os.path.exists("media/welcome.jpg.mp4"):
-        try:
-            with open("media/welcome.jpg.mp4", "rb") as photo:
-                await update.message.reply_photo(
-                    photo=photo,
-                    caption=TEXTS['ru']['welcome'],
-                    reply_markup=reply_markup,
-                    parse_mode='HTML'
-                )
-        except Exception as e:
-            logger.error(f"Ошибка загрузки welcome.jpg: {e}")
-            await update.message.reply_text(
-                TEXTS['ru']['welcome'],
-                reply_markup=reply_markup,
-                parse_mode='HTML'
-            )
-    else:
-        await update.message.reply_text(
-            TEXTS['ru']['welcome'],
-            reply_markup=reply_markup,
-            parse_mode='HTML'
-        )
+    await update.message.reply_text(
+        TEXTS['ru']['welcome'],
+        reply_markup=reply_markup,
+        parse_mode='HTML'
+    )
     
     return MAIN_MENU
 
@@ -292,7 +274,7 @@ async def language_choice(update: Update, context: CallbackContext) -> int:
     user_data[user_id] = {'language': language, 'step': 'name'}
 
     # Обновляем сообщение с убранными кнопками
-    welcome_text = TEXTS[language]['welcome'].split('🌐')[0]  # Берем только приветствие без выбора языка
+    welcome_text = TEXTS[language]['welcome'].split('🌐')[0]
     await query.edit_message_text(
         text=welcome_text,
         parse_mode='HTML'
@@ -627,7 +609,7 @@ async def main() -> None:
     try:
         # Очищаем предыдущий webhook и устанавливаем новый
         await application.bot.delete_webhook()
-        await asyncio.sleep(1)  # небольшая пауза
+        await asyncio.sleep(1)
         await application.bot.set_webhook(webhook_url)
         logger.info("Webhook успешно установлен!")
         return True
@@ -639,17 +621,26 @@ def run_bot():
     """Запуск бота"""
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-    webhook_success = loop.run_until_complete(main())
     
-    if webhook_success:
-        logger.info("Запускаем Flask сервер для webhook")
-        # Используем production сервер
-        from waitress import serve
-        serve(app, host='0.0.0.0', port=PORT)
-    else:
-        logger.error("Не удалось установить webhook, запускаем polling")
-        # Fallback на polling
-        loop.run_until_complete(application.run_polling())
+    try:
+        webhook_success = loop.run_until_complete(main())
+        
+        if webhook_success:
+            logger.info("Запускаем Flask сервер для webhook")
+            # Используем production сервер
+            from waitress import serve
+            serve(app, host='0.0.0.0', port=PORT)
+        else:
+            logger.error("Не удалось установить webhook, запускаем polling")
+            # Fallback на polling
+            loop.run_until_complete(application.run_polling())
+    except Exception as e:
+        logger.error(f"Критическая ошибка при запуске бота: {e}")
+        # Пытаемся запустить polling как последнюю возможность
+        try:
+            loop.run_until_complete(application.run_polling())
+        except:
+            logger.critical("Бот не может быть запущен")
 
 if __name__ == '__main__':
     run_bot()
