@@ -49,6 +49,7 @@ os.makedirs(MEDIA_DIR, exist_ok=True)
 
 # Глобальные переменные
 user_data = {}
+application = None
 
 # Тексты на разных языках
 TEXTS = {
@@ -556,9 +557,6 @@ async def error_handler(update: Update, context: CallbackContext) -> None:
 # Создаем Flask приложение
 app = Flask(__name__)
 
-# Глобальная переменная для хранения приложения Telegram
-application = None
-
 @app.route('/')
 def index():
     return "Bot is running and ready to receive webhooks!"
@@ -637,33 +635,8 @@ async def main() -> None:
         logger.error(f"Ошибка установки webhook: {e}")
         return False
 
-@app.route('/webhook', methods=['POST'])
-def webhook():
-    """Обработчик webhook от Telegram"""
-    if application is None:
-        return "Application not initialized", 500
-        
-    try:
-        # Получаем обновление от Telegram
-        update_data = request.get_json()
-        update = Update.de_json(update_data, application.bot)
-        
-        # Обрабатываем обновление асинхронно
-        asyncio.run(application.process_update(update))
-        
-        return "OK", 200
-    except Exception as e:
-        logger.error(f"Ошибка обработки webhook: {e}")
-        return "Error", 500
-
-@app.route('/')
-def index():
-    return "Bot is running and ready to receive webhooks!"
-
-if __name__ == '__main__':
-    import asyncio
-    
-    # Инициализируем бота
+def run_bot():
+    """Запуск бота"""
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     webhook_success = loop.run_until_complete(main())
@@ -677,3 +650,6 @@ if __name__ == '__main__':
         logger.error("Не удалось установить webhook, запускаем polling")
         # Fallback на polling
         loop.run_until_complete(application.run_polling())
+
+if __name__ == '__main__':
+    run_bot()
