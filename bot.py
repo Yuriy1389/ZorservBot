@@ -619,28 +619,24 @@ async def main() -> None:
 
 def run_bot():
     """Запуск бота"""
+    global application
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-    
+
     try:
         webhook_success = loop.run_until_complete(main())
-        
+
         if webhook_success:
             logger.info("Запускаем Flask сервер для webhook")
-            # Используем production сервер
             from waitress import serve
-            serve(app, host='0.0.0.0', port=PORT)
+            serve(app, host="0.0.0.0", port=PORT)
         else:
             logger.error("Не удалось установить webhook, запускаем polling")
-            # Fallback на polling
-            loop.run_until_complete(application.run_polling())
+            # ⚠️ run_polling больше не coroutine
+            application.run_polling()
     except Exception as e:
         logger.error(f"Критическая ошибка при запуске бота: {e}")
-        # Пытаемся запустить polling как последнюю возможность
         try:
-            loop.run_until_complete(application.run_polling())
+            application.run_polling()
         except:
             logger.critical("Бот не может быть запущен")
-
-if __name__ == '__main__':
-    run_bot()
