@@ -1,5 +1,5 @@
-python-telegram-bot==20.7
+python-telegram-bot==13.15
 Flask==2.3.3
 requests==2.31.0
 pytz==2023.3
-waitress
+waitress==3.0.2
