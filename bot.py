@@ -627,12 +627,11 @@ def run_bot():
         webhook_success = loop.run_until_complete(main())
 
         if webhook_success:
-            logger.info("Запускаем Flask сервер для webhook")
+            logger.info(f"Запускаем Flask сервер на порту {PORT}")
             from waitress import serve
-            serve(app, host="0.0.0.0", port=PORT)
+            serve(app, host="0.0.0.0", port=PORT)   # блокирующий запуск
         else:
             logger.error("Не удалось установить webhook, запускаем polling")
-            # Запускаем polling как блокирующий процесс
             application.run_polling(allowed_updates=Update.ALL_TYPES)
     except Exception as e:
         logger.error(f"Критическая ошибка при запуске бота: {e}")
@@ -640,3 +639,8 @@ def run_bot():
             application.run_polling(allowed_updates=Update.ALL_TYPES)
         except:
             logger.critical("Бот не может быть запущен")
+
+
+if __name__ == "__main__":
+    run_bot()
+
