@@ -632,11 +632,11 @@ def run_bot():
             serve(app, host="0.0.0.0", port=PORT)
         else:
             logger.error("Не удалось установить webhook, запускаем polling")
-            # ⚠️ run_polling больше не coroutine
-            application.run_polling()
+            # Запускаем polling как блокирующий процесс
+            application.run_polling(allowed_updates=Update.ALL_TYPES)
     except Exception as e:
         logger.error(f"Критическая ошибка при запуске бота: {e}")
         try:
-            application.run_polling()
+            application.run_polling(allowed_updates=Update.ALL_TYPES)
         except:
             logger.critical("Бот не может быть запущен")
